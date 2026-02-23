@@ -4,16 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "bun run scripts/sync-explanations.ts"
+    "sync": "bun run scripts/sync-explanations.ts",
+    "insert": "bun run scripts/insert-explanations.ts"
   },
   "dependencies": {
     "postgres": "^3.4.4",
-    "xxhashjs": "^0.2.2",
+    "uuid": "^13.0.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
-    "@types/xxhashjs": "^0.2.4",
+    "@types/uuid": "^11.0.0",
     "typescript": "^5.8.2"
   }
 }
