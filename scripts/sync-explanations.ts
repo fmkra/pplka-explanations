@@ -1,18 +1,23 @@
 /**
- * Sync explanations from this repo to the database.
+ * Incremental sync of explanations to the database.
  *
- * This script:
- * 1. Reads meta.json to get the mapping of files to question IDs
- * 2. Reads each explanation markdown file
- * 3. Upserts explanations in the database
- * 4. Updates questions to reference the correct explanation
+ * Compares the current meta.json with the previous commit's version
+ * and only processes entries that changed. Also detects changed .md files.
+ *
+ * Operations:
+ * - Removed entries: unlinks questions and deletes the explanation
+ * - Added entries: inserts explanation and links questions
+ * - Modified entries: updates explanation content and question links
+ * - Changed .md files: updates explanation content
  *
  * Run with: bun run scripts/sync-explanations.ts
  * Requires DATABASE_URL environment variable.
+ * Requires fetch-depth >= 2 in CI so HEAD~1 is available.
  */
 
-import { readFile, readdir } from 'fs/promises'
-import { join, relative } from 'path'
+import { readFile } from 'fs/promises'
+import { execSync } from 'child_process'
+import { join } from 'path'
 import postgres from 'postgres'
 import { v5 as uuidv5 } from 'uuid'
 import { z } from 'zod'
@@ -20,121 +25,211 @@ import { z } from 'zod'
 const DATABASE_URL = process.env.DATABASE_URL
 
 if (!DATABASE_URL) {
-    console.error('Error: DATABASE_URL environment variable is required')
-    process.exit(1)
+  console.error('Error: DATABASE_URL environment variable is required')
+  process.exit(1)
 }
 
 const sql = postgres(DATABASE_URL)
 
 const metaSchema = z.array(
-    z.object({
-        file: z.string(),
-        questions: z.array(z.string()),
-    }),
+  z.object({
+    file: z.string(),
+    questions: z.array(z.string()),
+  }),
 )
 
-/**
- * Read all explanation files recursively from a directory.
- */
-async function readExplanationsDir(dir: string, baseDir: string): Promise<Map<string, string>> {
-    const files = new Map<string, string>()
-    const entries = await readdir(dir, { withFileTypes: true })
+type MetaEntry = z.infer<typeof metaSchema>[number]
 
-    for (const entry of entries) {
-        const fullPath = join(dir, entry.name)
-        if (entry.isDirectory()) {
-            const subFiles = await readExplanationsDir(fullPath, baseDir)
-            for (const [k, v] of subFiles) {
-                files.set(k, v)
-            }
-        } else if (entry.name.endsWith('.md')) {
-            const relativePath = relative(baseDir, fullPath)
-            const content = await readFile(fullPath, 'utf-8')
-            files.set(relativePath, content)
-        }
-    }
+function generateExplanationId(filePath: string): string {
+  return uuidv5(filePath, uuidv5.URL)
+}
 
-    return files
+function getOldMeta(): MetaEntry[] {
+  try {
+    const content = execSync('git show HEAD~1:meta.json', {
+      encoding: 'utf-8',
+    })
+    return metaSchema.parse(JSON.parse(content))
+  } catch {
+    console.log('No previous meta.json found, treating as empty')
+    return []
+  }
+}
+
+function getChangedExplanationFiles(): Set<string> {
+  try {
+    const output = execSync(
+      'git diff --name-only HEAD~1 HEAD -- explanations/',
+      { encoding: 'utf-8' },
+    )
+    return new Set(
+      output
+        .trim()
+        .split('\n')
+        .filter(Boolean)
+        .map((f) => f.replace(/^explanations\//, '')),
+    )
+  } catch {
+    return new Set()
+  }
 }
 
 async function main() {
-    const baseDir = process.cwd()
-    const metaPath = join(baseDir, 'meta.json')
-    const explanationsDir = join(baseDir, 'explanations')
+  const baseDir = process.cwd()
+  const explanationsDir = join(baseDir, 'explanations')
 
-    console.log('Reading meta.json...')
-    const metaContent = await readFile(metaPath, 'utf-8')
-    const meta = metaSchema.parse(JSON.parse(metaContent))
+  console.log('Reading current meta.json...')
+  const metaContent = await readFile(join(baseDir, 'meta.json'), 'utf-8')
+  const newMeta = metaSchema.parse(JSON.parse(metaContent))
 
-    console.log(`Found ${meta.length} explanation entries in meta.json`)
+  console.log('Reading previous meta.json from git...')
+  const oldMeta = getOldMeta()
 
-    console.log('Reading explanation files...')
-    const explanationFiles = await readExplanationsDir(explanationsDir, explanationsDir)
+  const changedFiles = getChangedExplanationFiles()
+  console.log(`Changed explanation files: ${changedFiles.size}`)
 
-    console.log(`Found ${explanationFiles.size} explanation files`)
+  const oldMap = new Map(oldMeta.map((e) => [e.file, e]))
+  const newMap = new Map(newMeta.map((e) => [e.file, e]))
 
-    // Track statistics
-    let explanationsUpserted = 0
-    let questionsUpdated = 0
-    const questionsNotFound: string[] = []
+  const removed = oldMeta.filter((e) => !newMap.has(e.file))
+  const added = newMeta.filter((e) => !oldMap.has(e.file))
+  const kept = newMeta.filter((e) => oldMap.has(e.file))
 
-    // Process each meta entry
-    for (const entry of meta) {
-        const content = explanationFiles.get(entry.file)
+  const questionsModified = kept.filter((e) => {
+    const old = oldMap.get(e.file)!
+    return (
+      JSON.stringify([...old.questions].sort()) !==
+      JSON.stringify([...e.questions].sort())
+    )
+  })
 
-        if (!content) {
-            console.warn(`Warning: File not found: ${entry.file}`)
-            continue
-        }
+  // Entries where only the .md content changed (not already covered by add/modify)
+  const alreadyHandled = new Set([
+    ...added.map((e) => e.file),
+    ...questionsModified.map((e) => e.file),
+  ])
+  const contentOnly = kept.filter(
+    (e) => !alreadyHandled.has(e.file) && changedFiles.has(e.file),
+  )
 
-        const explanationId = uuidv5(entry.file, uuidv5.URL)
+  const toUpsert = [...added, ...questionsModified, ...contentOnly]
 
-        console.log(`Processing: ${entry.file} -> ${explanationId}`)
+  console.log(`\nDiff summary:`)
+  console.log(`  Removed: ${removed.length}`)
+  console.log(`  Added: ${added.length}`)
+  console.log(`  Questions modified: ${questionsModified.length}`)
+  console.log(`  Content-only changes: ${contentOnly.length}`)
 
-        // Upsert explanation
-        await sql`
+  if (
+    removed.length === 0 &&
+    toUpsert.length === 0 &&
+    questionsModified.length === 0
+  ) {
+    console.log('\nNothing to do.')
+    await sql.end()
+    return
+  }
+
+  const stats = {
+    deleted: 0,
+    upserted: 0,
+    questionsLinked: 0,
+    questionsUnlinked: 0,
+    questionsNotFound: [] as string[],
+  }
+
+  // --- Removed entries: unlink questions, delete explanation ---
+  for (const entry of removed) {
+    const explanationId = generateExplanationId(entry.file)
+    console.log(`[DEL] ${entry.file} (${explanationId})`)
+
+    for (const qid of entry.questions) {
+      await sql`
+        UPDATE "nauka-ppla_question"
+        SET "explanationId" = NULL
+        WHERE "externalId" = ${qid} AND "explanationId" = ${explanationId}
+      `
+      stats.questionsUnlinked++
+    }
+
+    await sql`DELETE FROM "nauka-ppla_explanation" WHERE id = ${explanationId}`
+    stats.deleted++
+  }
+
+  // --- Added / modified / content-changed entries: upsert explanation, link questions ---
+  for (const entry of toUpsert) {
+    const explanationId = generateExplanationId(entry.file)
+    const filePath = join(explanationsDir, entry.file)
+
+    let content: string
+    try {
+      content = await readFile(filePath, 'utf-8')
+    } catch {
+      console.warn(`  Warning: File not found: ${entry.file}`)
+      continue
+    }
+
+    console.log(`[UPS] ${entry.file} -> ${explanationId}`)
+
+    await sql`
       INSERT INTO "nauka-ppla_explanation" (id, explanation)
       VALUES (${explanationId}, ${content})
       ON CONFLICT (id) DO UPDATE SET explanation = EXCLUDED.explanation
     `
-        explanationsUpserted++
+    stats.upserted++
 
-        // Update questions to reference this explanation
-        for (const questionExternalId of entry.questions) {
-            const result = await sql`
+    for (const qid of entry.questions) {
+      const result = await sql`
         UPDATE "nauka-ppla_question"
         SET "explanationId" = ${explanationId}
-        WHERE "externalId" = ${questionExternalId}
+        WHERE "externalId" = ${qid}
         RETURNING id
       `
 
-            if (result.length > 0) {
-                questionsUpdated++
-                console.log(`  Updated question: ${questionExternalId}`)
-            } else {
-                questionsNotFound.push(questionExternalId)
-                console.warn(`  Warning: Question not found: ${questionExternalId}`)
-            }
-        }
+      if (result.length > 0) {
+        stats.questionsLinked++
+      } else {
+        stats.questionsNotFound.push(qid)
+      }
     }
+  }
 
-    // Summary
-    console.log('\n--- Summary ---')
-    console.log(`Explanations upserted: ${explanationsUpserted}`)
-    console.log(`Questions updated: ${questionsUpdated}`)
+  // --- Modified entries: unlink questions that were removed from the entry ---
+  for (const entry of questionsModified) {
+    const old = oldMap.get(entry.file)!
+    const explanationId = generateExplanationId(entry.file)
+    const newQuestions = new Set(entry.questions)
+    const removedQuestions = old.questions.filter((q) => !newQuestions.has(q))
 
-    if (questionsNotFound.length > 0) {
-        console.log(`Questions not found (${questionsNotFound.length}):`)
-        for (const id of questionsNotFound) {
-            console.log(`  - ${id}`)
-        }
+    for (const qid of removedQuestions) {
+      console.log(`  [UNLINK] ${qid} from ${entry.file}`)
+      await sql`
+        UPDATE "nauka-ppla_question"
+        SET "explanationId" = NULL
+        WHERE "externalId" = ${qid} AND "explanationId" = ${explanationId}
+      `
+      stats.questionsUnlinked++
     }
+  }
 
-    await sql.end()
-    console.log('\nDone!')
+  console.log('\n--- Summary ---')
+  console.log(`Explanations deleted: ${stats.deleted}`)
+  console.log(`Explanations upserted: ${stats.upserted}`)
+  console.log(`Questions linked: ${stats.questionsLinked}`)
+  console.log(`Questions unlinked: ${stats.questionsUnlinked}`)
+
+  if (stats.questionsNotFound.length > 0) {
+    console.log(`Questions not found (${stats.questionsNotFound.length}):`)
+    for (const id of stats.questionsNotFound) {
+      console.log(`  - ${id}`)
+    }
+  }
+
+  await sql.end()
+  console.log('\nDone!')
 }
 
 main().catch((error) => {
-    console.error('Error:', error)
-    process.exit(1)
+  console.error('Error:', error)
+  process.exit(1)
 })
