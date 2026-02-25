@@ -15,5 +15,11 @@
     "questions": [
       "PL090-0014"
     ]
+  },
+  {
+    "file": "zasady lotu/profil-skrzydła.md",
+    "questions": [
+      "PL080-0215"
+    ]
   }
 ]
