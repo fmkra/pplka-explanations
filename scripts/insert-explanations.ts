@@ -1,8 +1,11 @@
 import { readFile, readdir } from 'fs/promises'
 import { join, relative } from 'path'
 import postgres from 'postgres'
-import { v5 as uuidv5 } from 'uuid'
+import { v5 as uuidv5, v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
+
+const BRANCH = 'feat/profil-skrzydla'
+const SVGS_BASE_URL = `https://raw.githubusercontent.com/fmkra/pplka-explanations/refs/heads/${BRANCH}/explanations/`
 
 const DATABASE_URL = process.env.DATABASE_URL
 
@@ -13,12 +16,8 @@ if (!DATABASE_URL) {
 
 const sql = postgres(DATABASE_URL)
 
-const metaSchema = z.array(
-  z.object({
-    file: z.string(),
-    questions: z.array(z.string()),
-  }),
-)
+// meta.json: question external ID -> ordered array of explanation file paths
+const metaSchema = z.record(z.string(), z.array(z.string()))
 
 /**
  * Generate a deterministic UUID v5 from a file path.
@@ -46,6 +45,10 @@ async function readExplanationsDir(
       const relativePath = relative(baseDir, fullPath)
       const content = await readFile(fullPath, 'utf-8')
       files.set(relativePath, content)
+    } else if (entry.name.endsWith('.svg')) {
+      const relativePath = relative(baseDir, fullPath)
+      const svgUrl = `${SVGS_BASE_URL}${encodeURIComponent(relativePath)}`
+      files.set(relativePath, `![](${svgUrl})`)
     }
   }
 
@@ -61,62 +64,84 @@ async function main() {
   const metaContent = await readFile(metaPath, 'utf-8')
   const meta = metaSchema.parse(JSON.parse(metaContent))
 
-  console.log(`Found ${meta.length} explanation entries in meta.json`)
+  const questionIds = Object.keys(meta)
+  console.log(`Found ${questionIds.length} questions in meta.json`)
+
+  // All unique explanation file paths (order per question is in meta values)
+  const uniqueFiles = [...new Set(questionIds.flatMap((q) => meta[q]))]
+  console.log(`Found ${uniqueFiles.length} unique explanation file paths`)
 
   console.log('Reading explanation files (full sync)...')
   const explanationFiles = await readExplanationsDir(
     explanationsDir,
     explanationsDir,
   )
+  console.log(`Found ${explanationFiles.size} explanation files on disk`)
 
-  console.log(`Found ${explanationFiles.size} explanation files`)
-
+  // 1) Upsert each unique explanation (one file = one explanation)
   let explanationsUpserted = 0
-  let questionsUpdated = 0
-  const questionsNotFound: string[] = []
-
-  for (const entry of meta) {
-    const content = explanationFiles.get(entry.file)
-
+  for (const file of uniqueFiles) {
+    const content = explanationFiles.get(file)
     if (!content) {
-      console.warn(`Warning: File not found: ${entry.file}`)
+      console.warn(`Warning: File not found: ${file}`)
       continue
     }
-
-    const explanationId = generateExplanationId(entry.file)
-
-    console.log(`[FULL] Processing: ${entry.file} -> ${explanationId}`)
-
+    const explanationId = generateExplanationId(file)
     await sql`
       INSERT INTO "nauka-ppla_explanation" (id, explanation)
       VALUES (${explanationId}, ${content})
       ON CONFLICT (id) DO UPDATE SET explanation = EXCLUDED.explanation
     `
     explanationsUpserted++
+  }
+  console.log(`Upserted ${explanationsUpserted} explanations`)
 
-    for (const questionExternalId of entry.questions) {
-      const result = await sql`
-        UPDATE "nauka-ppla_question"
-        SET "explanationId" = ${explanationId}
-        WHERE "externalId" = ${questionExternalId}
-        RETURNING id
-      `
+  // 2) For each question: replace its explanation links with ordered list from meta
+  let linksInserted = 0
+  const questionsNotFound: string[] = []
 
-      if (result.length > 0) {
-        questionsUpdated++
-        console.log(`  [FULL] Updated question: ${questionExternalId}`)
-      } else {
-        questionsNotFound.push(questionExternalId)
-        console.warn(
-          `  [FULL] Warning: Question not found: ${questionExternalId}`,
-        )
-      }
+  for (const questionExternalId of questionIds) {
+    const files = meta[questionExternalId]
+    if (!files.length) continue
+
+    const [question] = await sql`
+      SELECT id FROM "nauka-ppla_question"
+      WHERE "externalId" = ${questionExternalId}
+    `
+    if (!question) {
+      questionsNotFound.push(questionExternalId)
+      console.warn(`Warning: Question not found: ${questionExternalId}`)
+      continue
     }
+
+    await sql`
+      DELETE FROM "nauka-ppla_question_to_explanation"
+      WHERE "questionId" = ${question.id}
+    `
+
+    for (let order = 0; order < files.length; order++) {
+      const file = files[order]
+      const content = explanationFiles.get(file)
+      if (!content) {
+        console.warn(`Warning: File not found: ${file}, skipping link`)
+        continue
+      }
+      const explanationId = generateExplanationId(file)
+      const id = uuidv4()
+      await sql`
+        INSERT INTO "nauka-ppla_question_to_explanation" ("questionId", "explanationId", "order", "id")
+        VALUES (${question.id}, ${explanationId}, ${order}, ${id})
+      `
+      linksInserted++
+    }
+    console.log(
+      `  Linked ${files.length} explanations to question ${questionExternalId}`,
+    )
   }
 
   console.log('\n--- Full Sync Summary ---')
   console.log(`Explanations upserted: ${explanationsUpserted}`)
-  console.log(`Questions updated: ${questionsUpdated}`)
+  console.log(`Question–explanation links inserted: ${linksInserted}`)
 
   if (questionsNotFound.length > 0) {
     console.log(`Questions not found (${questionsNotFound.length}):`)

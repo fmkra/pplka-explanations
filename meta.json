@@ -1,25 +1,104 @@
-[
-  {
-    "file": "łączność/alfabet-fonetyczny.md",
-    "questions": [
-      "PL090-0004",
-      "PL090-0005",
-      "PL090-0006",
-      "PL090-0047",
-      "PL090-0071",
-      "PL090-0073"
-    ]
-  },
-  {
-    "file": "łączność/PL090-0014.md",
-    "questions": [
-      "PL090-0014"
-    ]
-  },
-  {
-    "file": "zasady lotu/profil-skrzydła.md",
-    "questions": [
-      "PL080-0215"
-    ]
-  }
-]
+{
+  "PL080-0023": [
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0041": [
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0042": [
+    "zasady-lotu/pytania/0042.md",
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0054": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0116": [
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0117": [
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md",
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0118": [
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md",
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0141": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0167": [
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0177": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md",
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0188": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0189": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0119": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0212": [
+    "zasady-lotu/pytania/0212.md",
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0215": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0214": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL080-0233": [
+    "zasady-lotu/pytania/0233.md",
+    "zasady-lotu/obrys-skrzydła.svg",
+    "zasady-lotu/obrys-skrzydła.md"
+  ],
+  "PL080-0311": [
+    "zasady-lotu/profil-skrzydła.svg",
+    "zasady-lotu/profil-skrzydła.md"
+  ],
+  "PL090-0004": [
+    "łączność/alfabet-fonetyczny.md"
+  ],
+  "PL090-0005": [
+    "łączność/alfabet-fonetyczny.md"
+  ],
+  "PL090-0006": [
+    "łączność/alfabet-fonetyczny.md"
+  ],
+  "PL090-0047": [
+    "łączność/alfabet-fonetyczny.md"
+  ],
+  "PL090-0071": [
+    "łączność/alfabet-fonetyczny.md"
+  ],
+  "PL090-0073": [
+    "łączność/alfabet-fonetyczny.md"
+  ],
+  "PL090-0014": [
+    "łączność/PL090-0014.md"
+  ]
+}

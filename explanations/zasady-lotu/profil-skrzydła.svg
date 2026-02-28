@@ -23,15 +23,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="2.0108938"
-     inkscape:cx="368.24422"
-     inkscape:cy="268.28866"
-     inkscape:window-width="3440"
-     inkscape:window-height="1382"
-     inkscape:window-x="0"
-     inkscape:window-y="30"
+     inkscape:zoom="1.3046541"
+     inkscape:cx="279.76764"
+     inkscape:cy="83.930292"
+     inkscape:window-width="1512"
+     inkscape:window-height="862"
+     inkscape:window-x="551"
+     inkscape:window-y="1113"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer6" />
+     inkscape:current-layer="layer4" />
   <defs
      id="defs1">
     <marker
@@ -128,12 +128,6 @@
        inkscape:label="Rysunki"
        inkscape:groupmode="layer"
        id="layer1">
-      <path
-         style="fill:none;stroke:#000000;stroke-width:0.281557;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#ArrowWide-9);marker-end:url(#ArrowWide-9)"
-         d="m 82.761678,88.73243 0.06646,-9.264298"
-         id="path5-6"
-         sodipodi:nodetypes="cc"
-         inkscape:label="f strzałka" />
       <path
          style="fill:none;stroke:#000000;stroke-width:0.355206;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#ArrowWide-8);marker-end:url(#ArrowWide-8)"
          d="M 36.307893,96.220377 75.074109,96.042033"
@@ -321,7 +315,7 @@
          sodipodi:nodetypes="cc"
          inkscape:label="cięciwa linia" />
       <path
-         style="fill:none;stroke:#000000;stroke-width:0.354215;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#ArrowWide);marker-end:url(#ArrowWide)"
+         style="fill:none;stroke:#8200db;stroke-width:0.354215;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#ArrowWide);marker-end:url(#ArrowWide)"
          d="m 75.658593,88.195976 0.05418,-17.985478"
          id="path5"
          sodipodi:nodetypes="cc"
@@ -340,6 +334,12 @@
          cy="90.369759"
          r="0.59568816"
          inkscape:label="ostrze" />
+      <path
+         style="fill:none;stroke:#f38800;stroke-width:0.281557;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#ArrowWide-9);marker-end:url(#ArrowWide-9)"
+         d="m 82.761678,88.73243 0.06646,-9.264298"
+         id="path5-6"
+         sodipodi:nodetypes="cc"
+         inkscape:label="f strzałka" />
     </g>
     <g
        inkscape:groupmode="layer"
@@ -383,14 +383,14 @@
            y="95.079018">ostrze</tspan></text>
       <text
          xml:space="preserve"
-         style="font-size:4.23333px;font-family:arial;-inkscape-font-specification:arial;text-align:end;text-anchor:end;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         style="font-size:4.23333px;font-family:arial;-inkscape-font-specification:arial;text-align:end;text-anchor:end;display:inline;fill:#8200db;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
          x="74.908134"
          y="67.781281"
          id="text3-8-8"
          inkscape:label="grubość napis"><tspan
            sodipodi:role="line"
            id="tspan3-4-6"
-           style="font-size:4.23333px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none"
+           style="font-size:4.23333px;fill:#8200db;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none"
            x="74.908134"
            y="67.781281">grubość (g) - thickness</tspan></text>
       <text
@@ -407,14 +407,14 @@
            y="73.202316">linia szkieletowa - camber line</tspan></text>
       <text
          xml:space="preserve"
-         style="font-size:4.23333px;font-family:arial;-inkscape-font-specification:arial;text-align:end;text-anchor:end;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         style="font-size:4.23333px;font-family:arial;-inkscape-font-specification:arial;text-align:end;text-anchor:end;display:inline;fill:#f38800;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
          x="128.44777"
          y="68.294563"
          id="text3-8-8-3"
          inkscape:label="strzałka napis"><tspan
            sodipodi:role="line"
            id="tspan3-4-6-3"
-           style="font-size:4.23333px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none"
+           style="font-size:4.23333px;fill:#f38800;fill-opacity:1;stroke:none;stroke-width:0.249999;stroke-linejoin:miter;stroke-dasharray:none"
            x="128.44777"
            y="68.294563">strzałka (f) - max camber</tspan></text>
       <text
