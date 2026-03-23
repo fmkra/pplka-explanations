@@ -1,104 +1,163 @@
 {
-  "PL080-0023": [
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
+  "knowledge_base": [
+    {
+      "name": "Zasady lotu",
+      "children": [
+        {
+          "name": "Skrzydło",
+          "children": [
+            {
+              "name": "Profil skrzydła",
+              "files": [
+                "zasady-lotu/skrzydło/profil-skrzydła.svg",
+                "zasady-lotu/skrzydło/profil-skrzydła.md"
+              ]
+            },
+            {
+              "name": "Obrys skrzydła",
+              "files": [
+                "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+                "zasady-lotu/skrzydło/obrys-skrzydła.md"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Dynamika",
+          "children": [
+            {
+              "name": "Ruch liniowy",
+              "files": [
+                "zasady-lotu/dynamika/ruch-liniowy.md"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Łączność",
+      "children": [
+        {
+          "name": "Alfabet fonetyczny",
+          "files": [
+            "łączność/alfabet-fonetyczny.md"
+          ]
+        }
+      ]
+    }
   ],
-  "PL080-0041": [
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
-  ],
-  "PL080-0042": [
-    "zasady-lotu/pytania/0042.md",
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
-  ],
-  "PL080-0054": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0116": [
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
-  ],
-  "PL080-0117": [
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md",
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0118": [
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md",
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0141": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0167": [
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
-  ],
-  "PL080-0177": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md",
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
-  ],
-  "PL080-0188": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0189": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0119": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0212": [
-    "zasady-lotu/pytania/0212.md",
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
-  ],
-  "PL080-0215": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0214": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL080-0233": [
-    "zasady-lotu/pytania/0233.md",
-    "zasady-lotu/obrys-skrzydła.svg",
-    "zasady-lotu/obrys-skrzydła.md"
-  ],
-  "PL080-0311": [
-    "zasady-lotu/profil-skrzydła.svg",
-    "zasady-lotu/profil-skrzydła.md"
-  ],
-  "PL090-0004": [
-    "łączność/alfabet-fonetyczny.md"
-  ],
-  "PL090-0005": [
-    "łączność/alfabet-fonetyczny.md"
-  ],
-  "PL090-0006": [
-    "łączność/alfabet-fonetyczny.md"
-  ],
-  "PL090-0047": [
-    "łączność/alfabet-fonetyczny.md"
-  ],
-  "PL090-0071": [
-    "łączność/alfabet-fonetyczny.md"
-  ],
-  "PL090-0073": [
-    "łączność/alfabet-fonetyczny.md"
-  ],
-  "PL090-0014": [
-    "łączność/PL090-0014.md"
-  ]
+  "questions": {
+    "PL080-0023": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0039": [
+      "zasady-lotu/dynamika/ruch-liniowy.md"
+    ],
+    "PL080-0040": [
+      "zasady-lotu/dynamika/ruch-liniowy.md"
+    ],
+    "PL080-0041": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0042": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0054": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0116": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0117": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md",
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0118": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md",
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0141": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0167": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0177": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md",
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0188": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0189": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0119": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0211": [
+      "zasady-lotu/dynamika/ruch-liniowy.md"
+    ],
+    "PL080-0212": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0213": [
+      "zasady-lotu/dynamika/ruch-liniowy.md"
+    ],
+    "PL080-0215": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0214": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL080-0233": [
+      "zasady-lotu/skrzydło/obrys-skrzydła.svg",
+      "zasady-lotu/skrzydło/obrys-skrzydła.md"
+    ],
+    "PL080-0311": [
+      "zasady-lotu/skrzydło/profil-skrzydła.svg",
+      "zasady-lotu/skrzydło/profil-skrzydła.md"
+    ],
+    "PL090-0004": [
+      "łączność/alfabet-fonetyczny.md"
+    ],
+    "PL090-0005": [
+      "łączność/alfabet-fonetyczny.md"
+    ],
+    "PL090-0006": [
+      "łączność/alfabet-fonetyczny.md"
+    ],
+    "PL090-0047": [
+      "łączność/alfabet-fonetyczny.md"
+    ],
+    "PL090-0071": [
+      "łączność/alfabet-fonetyczny.md"
+    ],
+    "PL090-0073": [
+      "łączność/alfabet-fonetyczny.md"
+    ],
+    "PL090-0014": [
+      "łączność/PL090-0014.md"
+    ]
+  }
 }

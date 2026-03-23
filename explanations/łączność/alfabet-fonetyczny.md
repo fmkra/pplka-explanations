@@ -42,8 +42,6 @@ Cyfry również mają ustandaryzowaną wymowę, aby uniknąć pomyłek (np. mię
 
 \* W warunkach słyszalności innej niż bardzo dobra cyfrę „1” należy wymawiać jako „JEDYNKA”, a cyfrę „5” należy wymawiać jako „PIĄTKA”
 
-TODO: Kiedy stosować i wtedy dodajemy PL090-0007
-
 ### Źródła
 
 - [Podręcznik radiotelefonicznej frazeologii lotniczej (wersja tylko polska)](https://edziennik.ulc.gov.pl/DU_ULC/2016/216/Zalacznik1.pdf)
