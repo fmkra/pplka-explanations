@@ -1,232 +1,711 @@
-/**
- * Incremental sync of explanations to the database.
- *
- * Compares the current meta.json with the previous commit's version
- * and only processes entries that changed. Also detects changed .md files.
- *
- * Operations:
- * - Removed entries: unlinks questions and deletes the explanation
- * - Added entries: inserts explanation and links questions
- * - Modified entries: updates explanation content and question links
- * - Changed .md files: updates explanation content
- *
- * Run with: bun run scripts/sync-explanations.ts
- * Requires DATABASE_URL environment variable.
- * Requires fetch-depth >= 2 in CI so HEAD~1 is available.
- */
-
-import { readFile } from 'fs/promises'
-import { execSync } from 'child_process'
-import { join } from 'path'
-import postgres from 'postgres'
-import { v5 as uuidv5 } from 'uuid'
 import { z } from 'zod'
+import { v5 as uuidv5 } from 'uuid'
+import { join } from 'path'
+import { readFile } from 'fs/promises'
+import postgres from 'postgres'
 
-const DATABASE_URL = process.env.DATABASE_URL
+export type PostgresClient = ReturnType<typeof postgres>
 
-if (!DATABASE_URL) {
-  console.error('Error: DATABASE_URL environment variable is required')
-  process.exit(1)
-}
+const BRANCH = 'main'
+const SVGS_BASE_URL = `https://raw.githubusercontent.com/fmkra/pplka-explanations/refs/heads/${BRANCH}/explanations/`
+const EXPLANATIONS_DIR = join(process.cwd(), 'explanations')
 
-const sql = postgres(DATABASE_URL)
-
-const metaSchema = z.array(
-  z.object({
-    file: z.string(),
-    questions: z.array(z.string()),
-  }),
+const knowledgeBaseNode: z.ZodTypeAny = z.lazy(() =>
+  z.union([knowledgeBaseNodeFile, knowledgeBaseNodeFolder]),
 )
 
-type MetaEntry = z.infer<typeof metaSchema>[number]
+const knowledgeBaseNodeFile = z.object({
+  name: z.string(),
+  slug: z.string(),
+  files: z.array(z.string()),
+})
 
-function generateExplanationId(filePath: string): string {
+const knowledgeBaseNodeFolder = z.object({
+  name: z.string(),
+  children: z.array(knowledgeBaseNode),
+})
+
+type KnowledgeBaseNode =
+  | z.infer<typeof knowledgeBaseNodeFile>
+  | z.infer<typeof knowledgeBaseNodeFolder>
+
+type KnowledgeBaseNodeRowNoId = {
+  name: string
+  slug: string | null
+  type: 'file' | 'folder'
+  parentId: string | null
+  order: number
+}
+
+type KnowledgeBaseNodeRow = KnowledgeBaseNodeRowNoId & {
+  id: string
+}
+
+const questionDataSchema = z.object({
+  explanations: z.array(z.string()),
+  extra: z.array(z.string()),
+})
+
+const metaSchema = z.object({
+  knowledge_base: z.array(knowledgeBaseNode),
+  questions: z.record(z.string(), questionDataSchema).default({}),
+})
+
+type QuestionData = z.infer<typeof questionDataSchema>
+
+type Meta = {
+  knowledge_base: KnowledgeBaseNode[]
+  questions: Record<string, QuestionData>
+}
+
+type ExplanationRow = {
+  id: string
+  explanation: string
+  type: 'text' | 'image'
+  file: string
+}
+
+type KbNodeToExplanationRow = {
+  knowledgeBaseNodeId: string
+  explanationId: string
+  order: number
+}
+
+/** Same rule as insert-explanations / sync: one stable UUID per explanation file path. */
+export function explanationIdFromFile(filePath: string): string {
   return uuidv5(filePath, uuidv5.URL)
 }
 
-function getOldMeta(): MetaEntry[] {
-  try {
-    const content = execSync('git show HEAD~1:meta.json', {
-      encoding: 'utf-8',
-    })
-    return metaSchema.parse(JSON.parse(content))
-  } catch {
-    console.log('No previous meta.json found, treating as empty')
-    return []
+/** Stable primary key for a `question_to_explanation` row (replaces uuid v4 per link). */
+export function questionToExplanationLinkId(
+  externalId: string,
+  order: number,
+  file: string,
+): string {
+  return uuidv5(
+    JSON.stringify(['question-to-explanation', externalId, order, file]),
+    uuidv5.URL,
+  )
+}
+
+export type QuestionToExplanationRow = {
+  id: string
+  questionId: string
+  questionExternalId: string
+  explanationId: string
+  order: number
+  isExtraResource: boolean
+}
+
+/** Loads `id` for each `externalId` present in `nauka-ppla_question` (single round-trip). */
+export async function fetchQuestionIdsByExternalIds(
+  sql: PostgresClient,
+  externalIds: string[],
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  if (externalIds.length === 0) return map
+  const rows = await sql`
+    SELECT id, "externalId"
+    FROM "nauka-ppla_question"
+    WHERE "externalId" IN ${sql(externalIds)}
+  `
+  for (const row of rows as unknown as {
+    id: string
+    externalId: string
+  }[]) {
+    map.set(row.externalId, row.id)
+  }
+  return map
+}
+
+function knowledgeBaseNodeMakeId(
+  node: KnowledgeBaseNodeRowNoId,
+): KnowledgeBaseNodeRow {
+  const allFields = [node.name, node.slug, node.type, node.parentId, node.order]
+  return {
+    ...node,
+    id: uuidv5(JSON.stringify(allFields), uuidv5.URL),
   }
 }
 
-function getChangedExplanationFiles(): Set<string> {
-  try {
-    const output = execSync(
-      'git diff --name-only HEAD~1 HEAD -- explanations/',
-      { encoding: 'utf-8' },
-    )
-    return new Set(
-      output
-        .trim()
-        .split('\n')
-        .filter(Boolean)
-        .map((f) => f.replace(/^explanations\//, '')),
-    )
-  } catch {
-    return new Set()
+export function parseRows(
+  parentId: string | null,
+  order: number,
+  node: KnowledgeBaseNode,
+): [KnowledgeBaseNodeRow[], Set<string>, KbNodeToExplanationRow[]] {
+  if ('files' in node) {
+    const row = knowledgeBaseNodeMakeId({
+      name: node.name,
+      slug: node.slug,
+      type: 'file',
+      parentId,
+      order,
+    })
+    return [
+      [row],
+      new Set(node.files),
+      node.files.map((file, index) => ({
+        knowledgeBaseNodeId: row.id,
+        explanationId: explanationIdFromFile(file),
+        order: index,
+      })),
+    ]
+  } else {
+    const row = knowledgeBaseNodeMakeId({
+      name: node.name,
+      slug: null,
+      type: 'folder',
+      parentId,
+      order,
+    })
+    const out = parseRowsChildren(row.id, node.children)
+    out[0].unshift(row)
+    return out
   }
+}
+
+function parseRowsChildren(
+  parentId: string | null,
+  children: KnowledgeBaseNode[],
+): [KnowledgeBaseNodeRow[], Set<string>, KbNodeToExplanationRow[]] {
+  const allFiles = new Set<string>()
+  const allKbNodeToExplanationRows: KbNodeToExplanationRow[] = []
+  return [
+    children.flatMap((child, index) => {
+      const [rows, files, kbNodeToExplanationRows] = parseRows(
+        parentId,
+        index,
+        child,
+      )
+      allKbNodeToExplanationRows.push(...kbNodeToExplanationRows)
+      files.forEach((file) => allFiles.add(file))
+      return rows
+    }),
+    allFiles,
+    allKbNodeToExplanationRows,
+  ]
+}
+
+function collectQuestionReferencedFiles(
+  questions: Record<string, QuestionData>,
+): Set<string> {
+  const paths = new Set<string>()
+  for (const q of Object.values(questions)) {
+    for (const file of q.explanations) paths.add(file)
+    for (const file of q.extra) paths.add(file)
+  }
+  return paths
+}
+
+/**
+ * Mirrors insert-explanations: explanations first (isExtraResource: false),
+ * then extra (true). Skips missing files like the INSERT script (`continue`).
+ */
+function buildQuestionToExplanationRows(
+  questions: Record<string, QuestionData>,
+  loadedFilePaths: Set<string>,
+  questionIdByExternalId: Map<string, string>,
+): QuestionToExplanationRow[] {
+  const rows: QuestionToExplanationRow[] = []
+  for (const externalId of Object.keys(questions).sort()) {
+    const data = questions[externalId]
+    const questionId = questionIdByExternalId.get(externalId)
+    if (!questionId) {
+      console.warn(`Warning: Question not found: ${externalId}`)
+      continue
+    }
+    const allFiles: [string, boolean][] = [
+      ...data.explanations.map((file) => [file, false] as [string, boolean]),
+      ...data.extra.map((file) => [file, true] as [string, boolean]),
+    ]
+    for (let order = 0; order < allFiles.length; order++) {
+      const [file, isExtraResource] = allFiles[order]
+      if (!loadedFilePaths.has(file)) {
+        console.warn(
+          `Warning: File not found for question ${externalId}, skipping link: ${file}`,
+        )
+        continue
+      }
+      rows.push({
+        id: questionToExplanationLinkId(externalId, order, file),
+        questionId,
+        questionExternalId: externalId,
+        explanationId: explanationIdFromFile(file),
+        order,
+        isExtraResource,
+      })
+    }
+  }
+  return rows
+}
+
+async function loadExplanationFile(
+  file: string,
+): Promise<ExplanationRow | null> {
+  try {
+    let explanation: string
+    let type: 'text' | 'image'
+    if (file.endsWith('.svg')) {
+      explanation = `${SVGS_BASE_URL}${encodeURIComponent(file)}`
+      type = 'image'
+    } else if (file.endsWith('.md')) {
+      explanation = await readFile(join(EXPLANATIONS_DIR, file), 'utf-8')
+      type = 'text'
+    } else {
+      throw new Error(`Unknown file type: ${file}`)
+    }
+    return {
+      id: explanationIdFromFile(file),
+      explanation,
+      type,
+      file,
+    }
+  } catch {
+    console.warn(`Warning: File not found or unreadable: ${file}`)
+    return null
+  }
+}
+
+/**
+ * @param sql Required when `meta.questions` is non-empty — used to resolve real `questionId`
+ *        from `"nauka-ppla_question"."externalId"` (same as `insert-explanations.ts`).
+ */
+export async function generateRows(meta: Meta, sql?: PostgresClient) {
+  const [knowledgeBaseRows, knowledgeBaseFiles, kbNodeToExplanationRows] =
+    parseRowsChildren(null, meta.knowledge_base)
+
+  const referencedByQuestions = collectQuestionReferencedFiles(meta.questions)
+  const unionFiles = new Set<string>([
+    ...knowledgeBaseFiles,
+    ...referencedByQuestions,
+  ])
+  const sortedFiles = [...unionFiles].sort((a, b) => a.localeCompare(b))
+
+  const loadedRows = (
+    await Promise.all(sortedFiles.map((file) => loadExplanationFile(file)))
+  ).filter((row): row is ExplanationRow => row !== null)
+
+  const loadedPaths = new Set(loadedRows.map((r) => r.file))
+  const loadedExplanationIds = new Set(loadedRows.map((r) => r.id))
+
+  const kbNodeToExplanationRowsFiltered = kbNodeToExplanationRows.filter(
+    (row) => loadedExplanationIds.has(row.explanationId),
+  )
+
+  const questionExternalIds = Object.keys(meta.questions)
+  let questionIdByExternalId = new Map<string, string>()
+  if (questionExternalIds.length > 0) {
+    if (!sql) {
+      throw new Error(
+        'generateRows: pass a postgres client as the second argument when meta.json has `questions` (needed to load question ids from the database)',
+      )
+    }
+    questionIdByExternalId = await fetchQuestionIdsByExternalIds(
+      sql,
+      questionExternalIds,
+    )
+  }
+
+  const questionToExplanationRows = buildQuestionToExplanationRows(
+    meta.questions,
+    loadedPaths,
+    questionIdByExternalId,
+  )
+
+  return {
+    knowledgeBaseRows,
+    explanationRows: loadedRows,
+    kbNodeToExplanationRows: kbNodeToExplanationRowsFiltered,
+    questionToExplanationRows,
+  }
+}
+
+export type GeneratedRows = Awaited<ReturnType<typeof generateRows>>
+
+export type SyncStats = {
+  explanationsDeleted: number
+  explanationsInserted: number
+  knowledgeBaseNodesDeleted: number
+  knowledgeBaseNodesInserted: number
+  kbNodeToExplanationDeleted: number
+  kbNodeToExplanationInserted: number
+  questionToExplanationDeleted: number
+  questionToExplanationInserted: number
+  contentFeedbackDeleted: number
+}
+
+function kbLinkKey(row: {
+  knowledgeBaseNodeId: string
+  explanationId: string
+  order: number
+}): string {
+  return JSON.stringify([row.knowledgeBaseNodeId, row.explanationId, row.order])
+}
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < arr.length; i += size) {
+    out.push(arr.slice(i, i + size))
+  }
+  return out
+}
+
+/**
+ * Compare `fetchCurrentRows(tx)` to `desiredRows` using `keyOf` and return
+ * rows to remove and rows to add (set difference on keys only).
+ */
+export async function diffSetByKey<T>(
+  tx: PostgresClient,
+  config: {
+    fetchCurrentRows: (tx: PostgresClient) => Promise<T[]>
+    desiredRows: T[]
+    keyOf: (row: T) => string
+    /** Same key in DB and desired but row should be replaced (delete + insert). */
+    replaceIfChanged?: (current: T, desired: T) => boolean
+  },
+): Promise<{ toDelete: T[]; toInsert: T[] }> {
+  const current = await config.fetchCurrentRows(tx)
+  const byKeyCurrent = new Map(current.map((r) => [config.keyOf(r), r]))
+  const byKeyDesired = new Map(
+    config.desiredRows.map((r) => [config.keyOf(r), r]),
+  )
+
+  const toDelete: T[] = []
+  const toInsert: T[] = []
+  for (const [k, cur] of byKeyCurrent) {
+    const want = byKeyDesired.get(k)
+    if (!want) {
+      toDelete.push(cur)
+    } else if (config.replaceIfChanged?.(cur, want)) {
+      toDelete.push(cur)
+      toInsert.push(want)
+    }
+  }
+  for (const [k, want] of byKeyDesired) {
+    if (!byKeyCurrent.has(k)) toInsert.push(want)
+  }
+  return { toDelete, toInsert }
+}
+
+export type SetSyncTable<T> = {
+  name: string
+  fetchCurrentRows: (tx: PostgresClient) => Promise<T[]>
+  desiredRows: T[]
+  keyOf: (row: T) => string
+  replaceIfChanged?: (current: T, desired: T) => boolean
+  deleteRows: (tx: PostgresClient, rows: T[]) => Promise<void>
+  insertRows: (tx: PostgresClient, rows: T[]) => Promise<void>
+}
+
+export type PreparedSetSync = {
+  name: string
+  toDelete: unknown[]
+  toInsert: unknown[]
+  runDeletes: (tx: PostgresClient) => Promise<void>
+  runInserts: (tx: PostgresClient) => Promise<void>
+}
+
+export async function prepareSetSync<T>(
+  tx: PostgresClient,
+  table: SetSyncTable<T>,
+): Promise<PreparedSetSync> {
+  const { toDelete, toInsert } = await diffSetByKey(tx, {
+    fetchCurrentRows: table.fetchCurrentRows,
+    desiredRows: table.desiredRows,
+    keyOf: table.keyOf,
+    replaceIfChanged: table.replaceIfChanged,
+  })
+  return {
+    name: table.name,
+    toDelete,
+    toInsert,
+    runDeletes: async (tx2) => {
+      if (toDelete.length > 0) await table.deleteRows(tx2, toDelete)
+    },
+    runInserts: async (tx2) => {
+      if (toInsert.length > 0) await table.insertRows(tx2, toInsert)
+    },
+  }
+}
+
+/**
+ * Runs each `runDeletes` in `deleteStepOrder`, then each `runInserts` in `insertStepOrder`.
+ * Use `prepareSetSync` plus optional custom `PreparedSetSync` steps (e.g. FK clean-up deletes only).
+ */
+export async function runDeletesThenInserts(
+  tx: PostgresClient,
+  deleteStepOrder: PreparedSetSync[],
+  insertStepOrder: PreparedSetSync[],
+): Promise<Record<string, { deleted: number; inserted: number }>> {
+  const out: Record<string, { deleted: number; inserted: number }> = {}
+  for (const p of deleteStepOrder) {
+    await p.runDeletes(tx)
+    out[p.name] = { deleted: p.toDelete.length, inserted: 0 }
+  }
+  for (const p of insertStepOrder) {
+    await p.runInserts(tx)
+    const prev = out[p.name] ?? { deleted: 0, inserted: 0 }
+    out[p.name] = { ...prev, inserted: p.toInsert.length }
+  }
+  return out
+}
+
+/**
+ * Compares generated rows to the DB using set difference per table; only DELETE then INSERT.
+ * Delete phase order respects FKs; insert phase is the reverse.
+ */
+export async function syncDatabaseFromGenerated(
+  sql: PostgresClient,
+  generated: GeneratedRows,
+): Promise<SyncStats> {
+  const {
+    knowledgeBaseRows,
+    explanationRows,
+    kbNodeToExplanationRows,
+    questionToExplanationRows,
+  } = generated
+
+  const questionIdsForQte = [
+    ...new Set(questionToExplanationRows.map((r) => r.questionId)),
+  ]
+
+  const stats: SyncStats = {
+    explanationsDeleted: 0,
+    explanationsInserted: 0,
+    knowledgeBaseNodesDeleted: 0,
+    knowledgeBaseNodesInserted: 0,
+    kbNodeToExplanationDeleted: 0,
+    kbNodeToExplanationInserted: 0,
+    questionToExplanationDeleted: 0,
+    questionToExplanationInserted: 0,
+    contentFeedbackDeleted: 0,
+  }
+
+  await sql.begin(async (txRaw) => {
+    const tx = txRaw as unknown as PostgresClient
+
+    const kbLinkSync = await prepareSetSync(tx, {
+      name: 'kb_node_to_explanation',
+      fetchCurrentRows: async (t) =>
+        (await t`
+          SELECT "knowledgeBaseNodeId", "explanationId", "order"
+          FROM "nauka-ppla_kb_node_to_explanation"
+        `) as unknown as KbNodeToExplanationRow[],
+      desiredRows: kbNodeToExplanationRows,
+      keyOf: kbLinkKey,
+      deleteRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            DELETE FROM "nauka-ppla_kb_node_to_explanation"
+            WHERE "knowledgeBaseNodeId" = ${r.knowledgeBaseNodeId}
+              AND "explanationId" = ${r.explanationId}
+              AND "order" = ${r.order}
+          `
+        }
+      },
+      insertRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            INSERT INTO "nauka-ppla_kb_node_to_explanation" ("knowledgeBaseNodeId", "explanationId", "order")
+            VALUES (${r.knowledgeBaseNodeId}, ${r.explanationId}, ${r.order})
+          `
+        }
+      },
+    })
+
+    const qteSync = await prepareSetSync(tx, {
+      name: 'question_to_explanation',
+      fetchCurrentRows: async (t) => {
+        if (questionIdsForQte.length === 0) return []
+        return (await t`
+          SELECT id, "questionId", "explanationId", "order", "isExtraResource"
+          FROM "nauka-ppla_question_to_explanation"
+          WHERE "questionId" IN ${t(questionIdsForQte)}
+        `) as unknown as QuestionToExplanationRow[]
+      },
+      desiredRows: questionToExplanationRows,
+      keyOf: (r) => r.id,
+      replaceIfChanged: (c, d) =>
+        c.questionId !== d.questionId ||
+        c.explanationId !== d.explanationId ||
+        c.order !== d.order ||
+        c.isExtraResource !== d.isExtraResource,
+      deleteRows: async (t, rows) => {
+        const ids = rows.map((r) => r.id)
+        for (const part of chunk(ids, 500)) {
+          if (part.length === 0) continue
+          await t`
+            DELETE FROM "nauka-ppla_question_to_explanation"
+            WHERE id IN ${t(part)}
+          `
+        }
+      },
+      insertRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            INSERT INTO "nauka-ppla_question_to_explanation" (
+              id, "questionId", "explanationId", "order", "isExtraResource"
+            )
+            VALUES (
+              ${r.id},
+              ${r.questionId},
+              ${r.explanationId},
+              ${r.order},
+              ${r.isExtraResource}
+            )
+          `
+        }
+      },
+    })
+
+    const kbNodeSync = await prepareSetSync(tx, {
+      name: 'knowledge_base_node',
+      fetchCurrentRows: async (t) =>
+        (await t`
+          SELECT id, name, type, "parentId", "order"
+          FROM "nauka-ppla_knowledge_base_node"
+        `) as unknown as KnowledgeBaseNodeRow[],
+      desiredRows: knowledgeBaseRows,
+      keyOf: (r) => r.id,
+      replaceIfChanged: (c, d) =>
+        c.name !== d.name ||
+        c.type !== d.type ||
+        c.parentId !== d.parentId ||
+        c.order !== d.order,
+      deleteRows: async (t, rows) => {
+        const ids = rows.map((r) => r.id)
+        for (const part of chunk(ids, 500)) {
+          if (part.length === 0) continue
+          await t`
+            DELETE FROM "nauka-ppla_knowledge_base_node"
+            WHERE id IN ${t(part)}
+          `
+        }
+      },
+      insertRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            INSERT INTO "nauka-ppla_knowledge_base_node" (id, name, type, "parentId", "order", "slug")
+            VALUES (${r.id}, ${r.name}, ${r.type}, ${r.parentId}, ${r.order}, ${r.slug})
+          `
+        }
+      },
+    })
+
+    const kbIdsToRemove = kbNodeSync.toDelete.map(
+      (r) => (r as KnowledgeBaseNodeRow).id,
+    )
+
+    const contentFeedbackCleanup: PreparedSetSync = {
+      name: 'content_feedback',
+      toDelete: [],
+      toInsert: [],
+      runDeletes: async (t) => {
+        if (kbIdsToRemove.length === 0) return
+        const del = await t`
+          DELETE FROM "nauka-ppla_content_feedback"
+          WHERE "knowledgeBaseNodeId" IN ${t(kbIdsToRemove)}
+          RETURNING id
+        `
+        stats.contentFeedbackDeleted = (
+          del as unknown as { id: string }[]
+        ).length
+      },
+      runInserts: async () => {},
+    }
+
+    const explanationSync = await prepareSetSync(tx, {
+      name: 'explanation',
+      fetchCurrentRows: async (t) =>
+        (await t`
+          SELECT id, explanation, type
+          FROM "nauka-ppla_explanation"
+        `) as unknown as ExplanationRow[],
+      desiredRows: explanationRows,
+      keyOf: (r) => r.id,
+      replaceIfChanged: (c, d) =>
+        c.explanation !== d.explanation || c.type !== d.type,
+      deleteRows: async (t, rows) => {
+        const ids = rows.map((r) => r.id)
+        for (const part of chunk(ids, 500)) {
+          if (part.length === 0) continue
+          await t`
+            DELETE FROM "nauka-ppla_explanation"
+            WHERE id IN ${t(part)}
+          `
+        }
+      },
+      insertRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            INSERT INTO "nauka-ppla_explanation" (id, explanation, type)
+            VALUES (${r.id}, ${r.explanation}, ${r.type})
+          `
+        }
+      },
+    })
+
+    const byName = await runDeletesThenInserts(
+      tx,
+      [
+        kbLinkSync,
+        qteSync,
+        contentFeedbackCleanup,
+        kbNodeSync,
+        explanationSync,
+      ],
+      [explanationSync, kbNodeSync, kbLinkSync, qteSync],
+    )
+
+    stats.explanationsDeleted = byName.explanation?.deleted ?? 0
+    stats.explanationsInserted = byName.explanation?.inserted ?? 0
+    stats.knowledgeBaseNodesDeleted = byName.knowledge_base_node?.deleted ?? 0
+    stats.knowledgeBaseNodesInserted = byName.knowledge_base_node?.inserted ?? 0
+    stats.kbNodeToExplanationDeleted =
+      byName.kb_node_to_explanation?.deleted ?? 0
+    stats.kbNodeToExplanationInserted =
+      byName.kb_node_to_explanation?.inserted ?? 0
+    stats.questionToExplanationDeleted =
+      byName.question_to_explanation?.deleted ?? 0
+    stats.questionToExplanationInserted =
+      byName.question_to_explanation?.inserted ?? 0
+    // `contentFeedbackDeleted` is set inside `contentFeedbackCleanup.runDeletes` (RETURNING count).
+  })
+
+  return stats
 }
 
 async function main() {
-  const baseDir = process.cwd()
-  const explanationsDir = join(baseDir, 'explanations')
-
-  console.log('Reading current meta.json...')
-  const metaContent = await readFile(join(baseDir, 'meta.json'), 'utf-8')
-  const newMeta = metaSchema.parse(JSON.parse(metaContent))
-
-  console.log('Reading previous meta.json from git...')
-  const oldMeta = getOldMeta()
-
-  const changedFiles = getChangedExplanationFiles()
-  console.log(`Changed explanation files: ${changedFiles.size}`)
-
-  const oldMap = new Map(oldMeta.map((e) => [e.file, e]))
-  const newMap = new Map(newMeta.map((e) => [e.file, e]))
-
-  const removed = oldMeta.filter((e) => !newMap.has(e.file))
-  const added = newMeta.filter((e) => !oldMap.has(e.file))
-  const kept = newMeta.filter((e) => oldMap.has(e.file))
-
-  const questionsModified = kept.filter((e) => {
-    const old = oldMap.get(e.file)!
-    return (
-      JSON.stringify([...old.questions].sort()) !==
-      JSON.stringify([...e.questions].sort())
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    console.error('Error: DATABASE_URL environment variable is required')
+    process.exit(1)
+  }
+  const metaFile = join(process.cwd(), 'meta.json')
+  const metaContent = await readFile(metaFile, 'utf-8')
+  const meta = metaSchema.parse(JSON.parse(metaContent))
+  const sql = postgres(databaseUrl)
+  try {
+    const generated = await generateRows(meta, sql)
+    const stats = await syncDatabaseFromGenerated(sql, generated)
+    console.log(
+      JSON.stringify(
+        {
+          stats,
+          counts: {
+            knowledgeBaseNodes: generated.knowledgeBaseRows.length,
+            explanations: generated.explanationRows.length,
+            kbNodeToExplanation: generated.kbNodeToExplanationRows.length,
+            questionToExplanation: generated.questionToExplanationRows.length,
+          },
+        },
+        null,
+        2,
+      ),
     )
-  })
-
-  // Entries where only the .md content changed (not already covered by add/modify)
-  const alreadyHandled = new Set([
-    ...added.map((e) => e.file),
-    ...questionsModified.map((e) => e.file),
-  ])
-  const contentOnly = kept.filter(
-    (e) => !alreadyHandled.has(e.file) && changedFiles.has(e.file),
-  )
-
-  const toUpsert = [...added, ...questionsModified, ...contentOnly]
-
-  console.log(`\nDiff summary:`)
-  console.log(`  Removed: ${removed.length}`)
-  console.log(`  Added: ${added.length}`)
-  console.log(`  Questions modified: ${questionsModified.length}`)
-  console.log(`  Content-only changes: ${contentOnly.length}`)
-
-  if (
-    removed.length === 0 &&
-    toUpsert.length === 0 &&
-    questionsModified.length === 0
-  ) {
-    console.log('\nNothing to do.')
+  } finally {
     await sql.end()
-    return
   }
-
-  const stats = {
-    deleted: 0,
-    upserted: 0,
-    questionsLinked: 0,
-    questionsUnlinked: 0,
-    questionsNotFound: [] as string[],
-  }
-
-  // --- Removed entries: unlink questions, delete explanation ---
-  for (const entry of removed) {
-    const explanationId = generateExplanationId(entry.file)
-    console.log(`[DEL] ${entry.file} (${explanationId})`)
-
-    for (const qid of entry.questions) {
-      await sql`
-        UPDATE "nauka-ppla_question"
-        SET "explanationId" = NULL
-        WHERE "externalId" = ${qid} AND "explanationId" = ${explanationId}
-      `
-      stats.questionsUnlinked++
-    }
-
-    await sql`DELETE FROM "nauka-ppla_explanation" WHERE id = ${explanationId}`
-    stats.deleted++
-  }
-
-  // --- Added / modified / content-changed entries: upsert explanation, link questions ---
-  for (const entry of toUpsert) {
-    const explanationId = generateExplanationId(entry.file)
-    const filePath = join(explanationsDir, entry.file)
-
-    let content: string
-    try {
-      content = await readFile(filePath, 'utf-8')
-    } catch {
-      console.warn(`  Warning: File not found: ${entry.file}`)
-      continue
-    }
-
-    console.log(`[UPS] ${entry.file} -> ${explanationId}`)
-
-    await sql`
-      INSERT INTO "nauka-ppla_explanation" (id, explanation)
-      VALUES (${explanationId}, ${content})
-      ON CONFLICT (id) DO UPDATE SET explanation = EXCLUDED.explanation
-    `
-    stats.upserted++
-
-    for (const qid of entry.questions) {
-      const result = await sql`
-        UPDATE "nauka-ppla_question"
-        SET "explanationId" = ${explanationId}
-        WHERE "externalId" = ${qid}
-        RETURNING id
-      `
-
-      if (result.length > 0) {
-        stats.questionsLinked++
-      } else {
-        stats.questionsNotFound.push(qid)
-      }
-    }
-  }
-
-  // --- Modified entries: unlink questions that were removed from the entry ---
-  for (const entry of questionsModified) {
-    const old = oldMap.get(entry.file)!
-    const explanationId = generateExplanationId(entry.file)
-    const newQuestions = new Set(entry.questions)
-    const removedQuestions = old.questions.filter((q) => !newQuestions.has(q))
-
-    for (const qid of removedQuestions) {
-      console.log(`  [UNLINK] ${qid} from ${entry.file}`)
-      await sql`
-        UPDATE "nauka-ppla_question"
-        SET "explanationId" = NULL
-        WHERE "externalId" = ${qid} AND "explanationId" = ${explanationId}
-      `
-      stats.questionsUnlinked++
-    }
-  }
-
-  console.log('\n--- Summary ---')
-  console.log(`Explanations deleted: ${stats.deleted}`)
-  console.log(`Explanations upserted: ${stats.upserted}`)
-  console.log(`Questions linked: ${stats.questionsLinked}`)
-  console.log(`Questions unlinked: ${stats.questionsUnlinked}`)
-
-  if (stats.questionsNotFound.length > 0) {
-    console.log(`Questions not found (${stats.questionsNotFound.length}):`)
-    for (const id of stats.questionsNotFound) {
-      console.log(`  - ${id}`)
-    }
-  }
-
-  await sql.end()
-  console.log('\nDone!')
 }
 
 main().catch((error) => {
