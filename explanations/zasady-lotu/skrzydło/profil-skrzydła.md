@@ -1,0 +1,7 @@
+- Profil skrzydła - Kształt przekroju skrzydła widziany z boku samolotu.
+- Ostrze (spływ) profilu - Punkt na obrysie profilu, który jest położony najdalej w kierunku przeciwnym do kierunku lotu.
+- Nosek profilu - Punkt na obrysie profilu, który jest wysunięty najdalej w stronę napływających strug powietrza.
+- Cięciwa (geometryczna) profilu - Odcinek łączący nosek profilu z ostrzem (spływem).
+- Szkieletowa profilu - Linia łącząca środki okręgów wpisanych w obrys profilu skrzydła. Szkieletowa pokrywa się z cięciwą w profilach symetrycznych, a odbiega w profilach asymetrycznych.
+- Strzałka profilu - Największa odległość między szkieletową i cięciwą profilu.
+- Grubość profilu - Największa odległość między górnym i dolnym obrysem profilu, prostopadła do jego cięciwy.
