@@ -1005,7 +1005,6 @@ export async function syncDatabaseFromGenerated(
       byName.question_to_explanation?.inserted ?? 0
     stats.questionToExplanationUpdated =
       byName.question_to_explanation?.updated ?? 0
-    // `contentFeedbackDeleted` is set inside `contentFeedbackCleanup.runDeletes` (RETURNING count).
   })
 
   return { stats, kbNodesToRerender, knowledgeBaseTreeChanged }
