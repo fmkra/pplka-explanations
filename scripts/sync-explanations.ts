@@ -325,12 +325,15 @@ export type GeneratedRows = Awaited<ReturnType<typeof generateRows>>
 export type SyncStats = {
   explanationsDeleted: number
   explanationsInserted: number
+  explanationsUpdated: number
   knowledgeBaseNodesDeleted: number
   knowledgeBaseNodesInserted: number
+  knowledgeBaseNodesUpdated: number
   kbNodeToExplanationDeleted: number
   kbNodeToExplanationInserted: number
   questionToExplanationDeleted: number
   questionToExplanationInserted: number
+  questionToExplanationUpdated: number
   contentFeedbackDeleted: number
 }
 
@@ -351,8 +354,9 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 /**
- * Compare `fetchCurrentRows(tx)` to `desiredRows` using `keyOf` and return
- * rows to remove and rows to add (set difference on keys only).
+ * Compare `fetchCurrentRows(tx)` to `desiredRows` using `keyOf`.
+ * Removed keys → `toDelete`, new keys → `toInsert`, same key but changed → `toUpdate`
+ * (so rows still referenced by FKs are updated in place, not deleted).
  */
 export async function diffSetByKey<T>(
   tx: PostgresClient,
@@ -360,10 +364,10 @@ export async function diffSetByKey<T>(
     fetchCurrentRows: (tx: PostgresClient) => Promise<T[]>
     desiredRows: T[]
     keyOf: (row: T) => string
-    /** Same key in DB and desired but row should be replaced (delete + insert). */
+    /** Same key in DB and desired but payload differs — use `updateRows`, not delete+insert. */
     replaceIfChanged?: (current: T, desired: T) => boolean
   },
-): Promise<{ toDelete: T[]; toInsert: T[] }> {
+): Promise<{ toDelete: T[]; toInsert: T[]; toUpdate: T[] }> {
   const current = await config.fetchCurrentRows(tx)
   const byKeyCurrent = new Map(current.map((r) => [config.keyOf(r), r]))
   const byKeyDesired = new Map(
@@ -372,19 +376,19 @@ export async function diffSetByKey<T>(
 
   const toDelete: T[] = []
   const toInsert: T[] = []
+  const toUpdate: T[] = []
   for (const [k, cur] of byKeyCurrent) {
     const want = byKeyDesired.get(k)
     if (!want) {
       toDelete.push(cur)
     } else if (config.replaceIfChanged?.(cur, want)) {
-      toDelete.push(cur)
-      toInsert.push(want)
+      toUpdate.push(want)
     }
   }
   for (const [k, want] of byKeyDesired) {
     if (!byKeyCurrent.has(k)) toInsert.push(want)
   }
-  return { toDelete, toInsert }
+  return { toDelete, toInsert, toUpdate }
 }
 
 export type SetSyncTable<T> = {
@@ -395,13 +399,17 @@ export type SetSyncTable<T> = {
   replaceIfChanged?: (current: T, desired: T) => boolean
   deleteRows: (tx: PostgresClient, rows: T[]) => Promise<void>
   insertRows: (tx: PostgresClient, rows: T[]) => Promise<void>
+  /** Required when `replaceIfChanged` is set — same-key changes are updated in place. */
+  updateRows?: (tx: PostgresClient, rows: T[]) => Promise<void>
 }
 
 export type PreparedSetSync = {
   name: string
   toDelete: unknown[]
   toInsert: unknown[]
+  toUpdate: unknown[]
   runDeletes: (tx: PostgresClient) => Promise<void>
+  runUpdates: (tx: PostgresClient) => Promise<void>
   runInserts: (tx: PostgresClient) => Promise<void>
 }
 
@@ -409,18 +417,27 @@ export async function prepareSetSync<T>(
   tx: PostgresClient,
   table: SetSyncTable<T>,
 ): Promise<PreparedSetSync> {
-  const { toDelete, toInsert } = await diffSetByKey(tx, {
+  const { toDelete, toInsert, toUpdate } = await diffSetByKey(tx, {
     fetchCurrentRows: table.fetchCurrentRows,
     desiredRows: table.desiredRows,
     keyOf: table.keyOf,
     replaceIfChanged: table.replaceIfChanged,
   })
+  if (toUpdate.length > 0 && !table.updateRows) {
+    throw new Error(
+      `prepareSetSync(${table.name}): ${toUpdate.length} row(s) need in-place update but updateRows is missing`,
+    )
+  }
   return {
     name: table.name,
     toDelete,
     toInsert,
+    toUpdate,
     runDeletes: async (tx2) => {
       if (toDelete.length > 0) await table.deleteRows(tx2, toDelete)
+    },
+    runUpdates: async (tx2) => {
+      if (toUpdate.length > 0) await table.updateRows!(tx2, toUpdate)
     },
     runInserts: async (tx2) => {
       if (toInsert.length > 0) await table.insertRows(tx2, toInsert)
@@ -429,30 +446,36 @@ export async function prepareSetSync<T>(
 }
 
 /**
- * Runs each `runDeletes` in `deleteStepOrder`, then each `runInserts` in `insertStepOrder`.
- * Use `prepareSetSync` plus optional custom `PreparedSetSync` steps (e.g. FK clean-up deletes only).
+ * Deletes (dependents first), updates in place (same key), then inserts (reverse of delete order).
  */
 export async function runDeletesThenInserts(
   tx: PostgresClient,
   deleteStepOrder: PreparedSetSync[],
   insertStepOrder: PreparedSetSync[],
-): Promise<Record<string, { deleted: number; inserted: number }>> {
-  const out: Record<string, { deleted: number; inserted: number }> = {}
+): Promise<Record<string, { deleted: number; inserted: number; updated: number }>> {
+  const out: Record<string, { deleted: number; inserted: number; updated: number }> =
+    {}
   for (const p of deleteStepOrder) {
     await p.runDeletes(tx)
-    out[p.name] = { deleted: p.toDelete.length, inserted: 0 }
+    out[p.name] = { deleted: p.toDelete.length, inserted: 0, updated: 0 }
+  }
+  const updateStepOrder = [...insertStepOrder]
+  for (const p of updateStepOrder) {
+    await p.runUpdates(tx)
+    const prev = out[p.name] ?? { deleted: 0, inserted: 0, updated: 0 }
+    out[p.name] = { ...prev, updated: p.toUpdate.length }
   }
   for (const p of insertStepOrder) {
     await p.runInserts(tx)
-    const prev = out[p.name] ?? { deleted: 0, inserted: 0 }
+    const prev = out[p.name] ?? { deleted: 0, inserted: 0, updated: 0 }
     out[p.name] = { ...prev, inserted: p.toInsert.length }
   }
   return out
 }
 
 /**
- * Compares generated rows to the DB using set difference per table; only DELETE then INSERT.
- * Delete phase order respects FKs; insert phase is the reverse.
+ * Compares generated rows to the DB per table: DELETE removed keys, UPDATE same-key changes,
+ * INSERT new keys. Delete order respects FKs; insert order is the reverse; updates run between.
  */
 export async function syncDatabaseFromGenerated(
   sql: PostgresClient,
@@ -472,12 +495,15 @@ export async function syncDatabaseFromGenerated(
   const stats: SyncStats = {
     explanationsDeleted: 0,
     explanationsInserted: 0,
+    explanationsUpdated: 0,
     knowledgeBaseNodesDeleted: 0,
     knowledgeBaseNodesInserted: 0,
+    knowledgeBaseNodesUpdated: 0,
     kbNodeToExplanationDeleted: 0,
     kbNodeToExplanationInserted: 0,
     questionToExplanationDeleted: 0,
     questionToExplanationInserted: 0,
+    questionToExplanationUpdated: 0,
     contentFeedbackDeleted: 0,
   }
 
@@ -556,6 +582,19 @@ export async function syncDatabaseFromGenerated(
           `
         }
       },
+      updateRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            UPDATE "nauka-ppla_question_to_explanation"
+            SET
+              "questionId" = ${r.questionId},
+              "explanationId" = ${r.explanationId},
+              "order" = ${r.order},
+              "isExtraResource" = ${r.isExtraResource}
+            WHERE id = ${r.id}
+          `
+        }
+      },
     })
 
     const kbNodeSync = await prepareSetSync(tx, {
@@ -590,6 +629,20 @@ export async function syncDatabaseFromGenerated(
           `
         }
       },
+      updateRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            UPDATE "nauka-ppla_knowledge_base_node"
+            SET
+              name = ${r.name},
+              type = ${r.type},
+              "parentId" = ${r.parentId},
+              "order" = ${r.order},
+              slug = ${r.slug}
+            WHERE id = ${r.id}
+          `
+        }
+      },
     })
 
     const kbIdsToRemove = kbNodeSync.toDelete.map(
@@ -600,6 +653,7 @@ export async function syncDatabaseFromGenerated(
       name: 'content_feedback',
       toDelete: [],
       toInsert: [],
+      toUpdate: [],
       runDeletes: async (t) => {
         if (kbIdsToRemove.length === 0) return
         const del = await t`
@@ -611,6 +665,7 @@ export async function syncDatabaseFromGenerated(
           del as unknown as { id: string }[]
         ).length
       },
+      runUpdates: async () => {},
       runInserts: async () => {},
     }
 
@@ -643,24 +698,38 @@ export async function syncDatabaseFromGenerated(
           `
         }
       },
+      updateRows: async (t, rows) => {
+        for (const r of rows) {
+          await t`
+            UPDATE "nauka-ppla_explanation"
+            SET explanation = ${r.explanation}, type = ${r.type}
+            WHERE id = ${r.id}
+          `
+        }
+      },
     })
+
+    const deleteStepOrder: PreparedSetSync[] = [
+      kbLinkSync,
+      qteSync,
+      contentFeedbackCleanup,
+      kbNodeSync,
+      explanationSync,
+    ]
+    const insertStepOrder = [...deleteStepOrder].reverse()
 
     const byName = await runDeletesThenInserts(
       tx,
-      [
-        kbLinkSync,
-        qteSync,
-        contentFeedbackCleanup,
-        kbNodeSync,
-        explanationSync,
-      ],
-      [explanationSync, kbNodeSync, kbLinkSync, qteSync],
+      deleteStepOrder,
+      insertStepOrder,
     )
 
     stats.explanationsDeleted = byName.explanation?.deleted ?? 0
     stats.explanationsInserted = byName.explanation?.inserted ?? 0
+    stats.explanationsUpdated = byName.explanation?.updated ?? 0
     stats.knowledgeBaseNodesDeleted = byName.knowledge_base_node?.deleted ?? 0
     stats.knowledgeBaseNodesInserted = byName.knowledge_base_node?.inserted ?? 0
+    stats.knowledgeBaseNodesUpdated = byName.knowledge_base_node?.updated ?? 0
     stats.kbNodeToExplanationDeleted =
       byName.kb_node_to_explanation?.deleted ?? 0
     stats.kbNodeToExplanationInserted =
@@ -669,6 +738,8 @@ export async function syncDatabaseFromGenerated(
       byName.question_to_explanation?.deleted ?? 0
     stats.questionToExplanationInserted =
       byName.question_to_explanation?.inserted ?? 0
+    stats.questionToExplanationUpdated =
+      byName.question_to_explanation?.updated ?? 0
     // `contentFeedbackDeleted` is set inside `contentFeedbackCleanup.runDeletes` (RETURNING count).
   })
 
