@@ -21,6 +21,22 @@
                 "zasady-lotu/skrzydło/obrys-skrzydła.md",
                 "zasady-lotu/skrzydło/obrys-skrzydła.svg"
               ]
+            },
+            {
+              "name": "Ciśnienie przy profilu skrzydła",
+              "slug": "cisnienie-przy-profilu-skrzydla",
+              "files": [
+                "zasady-lotu/skrzydło/cisnienie-przy-profilu.md",
+                "zasady-lotu/skrzydło/cisnienie-przy-profilu.svg"
+              ]
+            },
+            {
+              "name": "Opływ powietrza wokół skrzydła",
+              "slug": "oplyw-powietrza-wokol-skrzydla",
+              "files": [
+                "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.md",
+                "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.svg"
+              ]
             }
           ]
         },
@@ -75,6 +91,27 @@
       "explanations": [],
       "extra": [
         "zasady-lotu/dynamika/ruch-po-okręgu.md"
+      ]
+    },
+    "PL080-0014": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/skrzydło/cisnienie-przy-profilu.md",
+        "zasady-lotu/skrzydło/cisnienie-przy-profilu.svg"
+      ]
+    },
+    "PL080-0018": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.md",
+        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.svg"
+      ]
+    },
+    "PL080-0060": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.md",
+        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.svg"
       ]
     },
     "PL080-0023": {
