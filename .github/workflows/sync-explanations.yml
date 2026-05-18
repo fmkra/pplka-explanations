@@ -5,6 +5,7 @@ on:
     paths:
       - 'meta.json'
       - 'explanations/**'
+      - 'scripts/**'
     branches:
       - main
 
