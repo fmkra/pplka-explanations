@@ -1061,6 +1061,7 @@ async function main() {
     } else if (slugs.length === 0 && !knowledgeBaseTreeChanged) {
       console.log('No KB pages to revalidate')
     } else {
+      console.log('Revalidating', slugs, knowledgeBaseTreeChanged)
       const res = await fetch(rebuildUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

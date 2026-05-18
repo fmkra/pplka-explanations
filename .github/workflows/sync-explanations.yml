@@ -29,4 +29,6 @@ jobs:
       - name: Sync explanations to database
         env:
           DATABASE_URL: ${{ secrets.CICD_DATABASE_URL }}
+          REVALIDATE_URL: ${{ secrets.REVALIDATE_URL }}
+          REVALIDATE_TOKEN: ${{ secrets.REVALIDATE_TOKEN }}
         run: bun run scripts/sync-explanations.ts
