@@ -312,11 +312,19 @@ export async function generateRows(meta: Meta, sql?: PostgresClient) {
     questionIdByExternalId,
   )
 
+  const managedExplanationIds = [
+    ...new Set([
+      ...loadedExplanationIds,
+      ...[...unionFiles].map((file) => explanationIdFromFile(file)),
+    ]),
+  ]
+
   return {
     knowledgeBaseRows,
     explanationRows: loadedRows,
     kbNodeToExplanationRows: kbNodeToExplanationRowsFiltered,
     questionToExplanationRows,
+    managedExplanationIds,
   }
 }
 
@@ -336,6 +344,29 @@ export type SyncStats = {
   questionToExplanationUpdated: number
   contentFeedbackDeleted: number
 }
+
+export type KbNodeRerenderReason =
+  | 'explanation'
+  | 'kb_links'
+  | 'question_count'
+  | 'node_fields'
+  /** KB tree changed; every page's nav must be rebuilt (includes all surviving file nodes). */
+  | 'navigation'
+
+/** File-type KB node that should be rebuilt on the static site (superset of actual changes). */
+export type KbNodeRerenderTarget = {
+  id: string
+  slug: string | null
+  name: string
+  reasons: KbNodeRerenderReason[]
+  /** Present when the node was removed from the KB tree (regenerate to drop the page). */
+  deleted?: boolean
+}
+
+type QteLink = Pick<
+  QuestionToExplanationRow,
+  'id' | 'questionId' | 'explanationId'
+>
 
 function kbLinkKey(row: {
   knowledgeBaseNodeId: string
@@ -452,9 +483,13 @@ export async function runDeletesThenInserts(
   tx: PostgresClient,
   deleteStepOrder: PreparedSetSync[],
   insertStepOrder: PreparedSetSync[],
-): Promise<Record<string, { deleted: number; inserted: number; updated: number }>> {
-  const out: Record<string, { deleted: number; inserted: number; updated: number }> =
-    {}
+): Promise<
+  Record<string, { deleted: number; inserted: number; updated: number }>
+> {
+  const out: Record<
+    string,
+    { deleted: number; inserted: number; updated: number }
+  > = {}
   for (const p of deleteStepOrder) {
     await p.runDeletes(tx)
     out[p.name] = { deleted: p.toDelete.length, inserted: 0, updated: 0 }
@@ -473,6 +508,202 @@ export async function runDeletesThenInserts(
   return out
 }
 
+function applyKbLinkDiff(
+  before: KbNodeToExplanationRow[],
+  sync: PreparedSetSync,
+): KbNodeToExplanationRow[] {
+  const deletedKeys = new Set(
+    (sync.toDelete as KbNodeToExplanationRow[]).map(kbLinkKey),
+  )
+  const kept = before.filter((r) => !deletedKeys.has(kbLinkKey(r)))
+  return [...kept, ...(sync.toInsert as KbNodeToExplanationRow[])]
+}
+
+function applyQteDiff(before: QteLink[], sync: PreparedSetSync): QteLink[] {
+  const deletedIds = new Set(
+    (sync.toDelete as QuestionToExplanationRow[]).map((r) => r.id),
+  )
+  const byId = new Map(
+    before.filter((r) => !deletedIds.has(r.id)).map((r) => [r.id, r]),
+  )
+  for (const r of sync.toUpdate as QuestionToExplanationRow[]) {
+    byId.set(r.id, r)
+  }
+  for (const r of sync.toInsert as QuestionToExplanationRow[]) {
+    byId.set(r.id, r)
+  }
+  return [...byId.values()]
+}
+
+function uniqueQuestionCountForKbNode(
+  nodeId: string,
+  kbLinks: KbNodeToExplanationRow[],
+  qteLinks: QteLink[],
+): number {
+  const explanationIds = new Set(
+    kbLinks
+      .filter((l) => l.knowledgeBaseNodeId === nodeId)
+      .map((l) => l.explanationId),
+  )
+  if (explanationIds.size === 0) return 0
+  const questionIds = new Set<string>()
+  for (const q of qteLinks) {
+    if (explanationIds.has(q.explanationId)) questionIds.add(q.questionId)
+  }
+  return questionIds.size
+}
+
+/** True when any `knowledge_base_node` row was inserted, updated, or deleted. */
+export function isKnowledgeBaseTreeChanged(
+  kbNodeSync: PreparedSetSync,
+): boolean {
+  return (
+    kbNodeSync.toDelete.length > 0 ||
+    kbNodeSync.toInsert.length > 0 ||
+    kbNodeSync.toUpdate.length > 0
+  )
+}
+
+export type ComputeKbNodesToRerenderResult = {
+  kbNodesToRerender: KbNodeRerenderTarget[]
+  knowledgeBaseTreeChanged: boolean
+}
+
+/**
+ * KB file nodes to rerender after sync (superset: may include extra nodes, never omits required ones).
+ * Uses sync diffs plus post-sync link/question projections.
+ */
+export function computeKbNodesToRerender(input: {
+  knowledgeBaseRows: KnowledgeBaseNodeRow[]
+  explanationSync: PreparedSetSync
+  kbLinkSync: PreparedSetSync
+  qteSync: PreparedSetSync
+  kbNodeSync: PreparedSetSync
+  kbLinksBefore: KbNodeToExplanationRow[]
+  qteBefore: QteLink[]
+}): ComputeKbNodesToRerenderResult {
+  const {
+    knowledgeBaseRows,
+    explanationSync,
+    kbLinkSync,
+    qteSync,
+    kbNodeSync,
+    kbLinksBefore,
+    qteBefore,
+  } = input
+
+  const kbLinksAfter = applyKbLinkDiff(kbLinksBefore, kbLinkSync)
+  const qteAfter = applyQteDiff(qteBefore, qteSync)
+
+  const fileNodes = knowledgeBaseRows.filter((n) => n.type === 'file')
+  const nodeById = new Map(fileNodes.map((n) => [n.id, n]))
+
+  const touchedExplanationIds = new Set<string>()
+  for (const r of [
+    ...(explanationSync.toDelete as ExplanationRow[]),
+    ...(explanationSync.toInsert as ExplanationRow[]),
+    ...(explanationSync.toUpdate as ExplanationRow[]),
+  ]) {
+    touchedExplanationIds.add(r.id)
+  }
+  for (const r of [
+    ...(qteSync.toDelete as QuestionToExplanationRow[]),
+    ...(qteSync.toInsert as QuestionToExplanationRow[]),
+    ...(qteSync.toUpdate as QuestionToExplanationRow[]),
+  ]) {
+    touchedExplanationIds.add(r.explanationId)
+  }
+
+  const reasonsByNodeId = new Map<string, Set<KbNodeRerenderReason>>()
+
+  const addReason = (nodeId: string, reason: KbNodeRerenderReason) => {
+    if (!nodeById.has(nodeId)) return
+    let set = reasonsByNodeId.get(nodeId)
+    if (!set) {
+      set = new Set()
+      reasonsByNodeId.set(nodeId, set)
+    }
+    set.add(reason)
+  }
+
+  for (const r of [
+    ...(kbLinkSync.toDelete as KbNodeToExplanationRow[]),
+    ...(kbLinkSync.toInsert as KbNodeToExplanationRow[]),
+  ]) {
+    addReason(r.knowledgeBaseNodeId, 'kb_links')
+  }
+
+  for (const link of [...kbLinksBefore, ...kbLinksAfter]) {
+    if (touchedExplanationIds.has(link.explanationId)) {
+      addReason(link.knowledgeBaseNodeId, 'explanation')
+    }
+  }
+
+  for (const node of fileNodes) {
+    const before = uniqueQuestionCountForKbNode(
+      node.id,
+      kbLinksBefore,
+      qteBefore,
+    )
+    const after = uniqueQuestionCountForKbNode(node.id, kbLinksAfter, qteAfter)
+    if (before !== after) addReason(node.id, 'question_count')
+  }
+
+  for (const r of [
+    ...(kbNodeSync.toDelete as KnowledgeBaseNodeRow[]),
+    ...(kbNodeSync.toInsert as KnowledgeBaseNodeRow[]),
+    ...(kbNodeSync.toUpdate as KnowledgeBaseNodeRow[]),
+  ]) {
+    if (r.type === 'file') addReason(r.id, 'node_fields')
+  }
+
+  const knowledgeBaseTreeChanged = isKnowledgeBaseTreeChanged(kbNodeSync)
+
+  const deletedFileNodes = (
+    kbNodeSync.toDelete as KnowledgeBaseNodeRow[]
+  ).filter((n) => n.type === 'file')
+
+  if (knowledgeBaseTreeChanged) {
+    for (const node of fileNodes) {
+      addReason(node.id, 'navigation')
+    }
+  }
+
+  const surviving = [...reasonsByNodeId.entries()].map(([id, reasons]) => {
+    const node = nodeById.get(id)!
+    return {
+      id,
+      slug: node.slug,
+      name: node.name,
+      reasons: [...reasons].sort(),
+    }
+  })
+
+  const removed = knowledgeBaseTreeChanged
+    ? deletedFileNodes.map((node) => ({
+        id: node.id,
+        slug: node.slug,
+        name: node.name,
+        reasons: ['navigation', 'node_fields'] satisfies KbNodeRerenderReason[],
+        deleted: true as const,
+      }))
+    : []
+
+  return {
+    kbNodesToRerender: [...surviving, ...removed].sort(
+      (a, b) =>
+        a.slug?.localeCompare(b.slug ?? '') ?? a.name.localeCompare(b.name),
+    ),
+    knowledgeBaseTreeChanged,
+  }
+}
+
+export type SyncDatabaseResult = {
+  stats: SyncStats
+  kbNodesToRerender: KbNodeRerenderTarget[]
+  knowledgeBaseTreeChanged: boolean
+}
+
 /**
  * Compares generated rows to the DB per table: DELETE removed keys, UPDATE same-key changes,
  * INSERT new keys. Delete order respects FKs; insert order is the reverse; updates run between.
@@ -480,17 +711,14 @@ export async function runDeletesThenInserts(
 export async function syncDatabaseFromGenerated(
   sql: PostgresClient,
   generated: GeneratedRows,
-): Promise<SyncStats> {
+): Promise<SyncDatabaseResult> {
   const {
     knowledgeBaseRows,
     explanationRows,
     kbNodeToExplanationRows,
     questionToExplanationRows,
+    managedExplanationIds,
   } = generated
-
-  const questionIdsForQte = [
-    ...new Set(questionToExplanationRows.map((r) => r.questionId)),
-  ]
 
   const stats: SyncStats = {
     explanationsDeleted: 0,
@@ -507,8 +735,32 @@ export async function syncDatabaseFromGenerated(
     contentFeedbackDeleted: 0,
   }
 
+  let kbNodesToRerender: KbNodeRerenderTarget[] = []
+  let knowledgeBaseTreeChanged = false
+
   await sql.begin(async (txRaw) => {
     const tx = txRaw as unknown as PostgresClient
+
+    const kbLinksBefore = (await tx`
+      SELECT "knowledgeBaseNodeId", "explanationId", "order"
+      FROM "nauka-ppla_kb_node_to_explanation"
+    `) as unknown as KbNodeToExplanationRow[]
+
+    const explanationIdsForQte = [
+      ...new Set([
+        ...managedExplanationIds,
+        ...kbLinksBefore.map((l) => l.explanationId),
+      ]),
+    ]
+
+    const qteBefore: QteLink[] =
+      explanationIdsForQte.length === 0
+        ? []
+        : ((await tx`
+            SELECT id, "questionId", "explanationId"
+            FROM "nauka-ppla_question_to_explanation"
+            WHERE "explanationId" IN ${tx(explanationIdsForQte)}
+          `) as unknown as QteLink[])
 
     const kbLinkSync = await prepareSetSync(tx, {
       name: 'kb_node_to_explanation',
@@ -542,11 +794,13 @@ export async function syncDatabaseFromGenerated(
     const qteSync = await prepareSetSync(tx, {
       name: 'question_to_explanation',
       fetchCurrentRows: async (t) => {
-        if (questionIdsForQte.length === 0) return []
+        if (explanationIdsForQte.length === 0) return []
+        // Scope by explanation, not question: meta only lists desired links, but the DB
+        // may still have rows for removed questions or stale link ids for the same explanations.
         return (await t`
           SELECT id, "questionId", "explanationId", "order", "isExtraResource"
           FROM "nauka-ppla_question_to_explanation"
-          WHERE "questionId" IN ${t(questionIdsForQte)}
+          WHERE "explanationId" IN ${t(explanationIdsForQte)}
         `) as unknown as QuestionToExplanationRow[]
       },
       desiredRows: questionToExplanationRows,
@@ -601,7 +855,7 @@ export async function syncDatabaseFromGenerated(
       name: 'knowledge_base_node',
       fetchCurrentRows: async (t) =>
         (await t`
-          SELECT id, name, type, "parentId", "order"
+          SELECT id, name, type, "parentId", "order", slug
           FROM "nauka-ppla_knowledge_base_node"
         `) as unknown as KnowledgeBaseNodeRow[],
       desiredRows: knowledgeBaseRows,
@@ -709,6 +963,17 @@ export async function syncDatabaseFromGenerated(
       },
     })
 
+    ;({ kbNodesToRerender, knowledgeBaseTreeChanged } =
+      computeKbNodesToRerender({
+        knowledgeBaseRows,
+        explanationSync,
+        kbLinkSync,
+        qteSync,
+        kbNodeSync,
+        kbLinksBefore,
+        qteBefore,
+      }))
+
     const deleteStepOrder: PreparedSetSync[] = [
       kbLinkSync,
       qteSync,
@@ -743,7 +1008,7 @@ export async function syncDatabaseFromGenerated(
     // `contentFeedbackDeleted` is set inside `contentFeedbackCleanup.runDeletes` (RETURNING count).
   })
 
-  return stats
+  return { stats, kbNodesToRerender, knowledgeBaseTreeChanged }
 }
 
 async function main() {
@@ -758,11 +1023,14 @@ async function main() {
   const sql = postgres(databaseUrl)
   try {
     const generated = await generateRows(meta, sql)
-    const stats = await syncDatabaseFromGenerated(sql, generated)
+    const { stats, kbNodesToRerender, knowledgeBaseTreeChanged } =
+      await syncDatabaseFromGenerated(sql, generated)
     console.log(
       JSON.stringify(
         {
           stats,
+          knowledgeBaseTreeChanged,
+          kbNodesToRerender,
           counts: {
             knowledgeBaseNodes: generated.knowledgeBaseRows.length,
             explanations: generated.explanationRows.length,
@@ -774,6 +1042,42 @@ async function main() {
         2,
       ),
     )
+
+    const slugs = [
+      ...new Set(
+        kbNodesToRerender
+          .map((x) => x.slug)
+          .filter((s): s is string => s != null && s !== ''),
+      ),
+    ]
+
+    const rebuildUrl = process.env.REVALIDATE_URL
+    const rebuildToken = process.env.REVALIDATE_TOKEN
+
+    if (!rebuildUrl || !rebuildToken) {
+      if (!rebuildUrl) console.log('REVALIDATE_URL not set')
+      if (!rebuildToken) console.log('REVALIDATE_TOKEN not set')
+      console.log('Skipping static page revalidation')
+    } else if (slugs.length === 0 && !knowledgeBaseTreeChanged) {
+      console.log('No KB pages to revalidate')
+    } else {
+      const res = await fetch(rebuildUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: rebuildToken,
+          slugs,
+          navigation: knowledgeBaseTreeChanged,
+        }),
+      })
+      if (!res.ok) {
+        console.error(`Revalidate failed (${res.status}): ${await res.text()}`)
+        process.exit(1)
+      }
+      console.log(
+        `Revalidated ${slugs.length} slug(s), navigation=${knowledgeBaseTreeChanged}`,
+      )
+    }
   } finally {
     await sql.end()
   }
