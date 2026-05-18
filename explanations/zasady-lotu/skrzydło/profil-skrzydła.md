@@ -1,3 +1,5 @@
+# Profil skrzydła
+
 - Profil skrzydła - Kształt przekroju skrzydła widziany z boku samolotu.
 - Ostrze (spływ) profilu - Punkt na obrysie profilu, który jest położony najdalej w kierunku przeciwnym do kierunku lotu.
 - Nosek profilu - Punkt na obrysie profilu, który jest wysunięty najdalej w stronę napływających strug powietrza.

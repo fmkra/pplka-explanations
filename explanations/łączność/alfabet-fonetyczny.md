@@ -1,8 +1,8 @@
-### Alfabet i cyfry w łączności lotniczej
+# Alfabet i cyfry w łączności lotniczej
 
 W komunikacji radiowej kluczowe jest zapewnienie maksymalnej zrozumiałości, nawet w warunkach zakłóceń lub słabej jakości sygnału. Z tego powodu na całym świecie stosuje się ustandaryzowany sposób wymawiania liter i cyfr, co minimalizuje ryzyko pomyłek.
 
-### Alfabet fonetyczny ICAO
+## Alfabet fonetyczny ICAO
 
 Każdej literze alfabetu łacińskiego przypisano unikalne słowo. Ten system, znany jako alfabet fonetyczny ICAO (Organizacji Międzynarodowego Lotnictwa Cywilnego), jest obowiązkowy w międzynarodowej łączności lotniczej.
 
@@ -22,7 +22,7 @@ Każdej literze alfabetu łacińskiego przypisano unikalne słowo. Ten system, z
 | L      | Lima    | Y      | Yankee   |
 | M      | Mike    | Z      | Zulu     |
 
-### Wymowa cyfr i liczb
+## Wymowa cyfr i liczb
 
 Cyfry również mają ustandaryzowaną wymowę, aby uniknąć pomyłek (np. między "three" i "tree" w języku angielskim).
 
@@ -42,7 +42,7 @@ Cyfry również mają ustandaryzowaną wymowę, aby uniknąć pomyłek (np. mię
 
 \* W warunkach słyszalności innej niż bardzo dobra cyfrę „1” należy wymawiać jako „JEDYNKA”, a cyfrę „5” należy wymawiać jako „PIĄTKA”
 
-### Źródła
+## Źródła
 
 - [Podręcznik radiotelefonicznej frazeologii lotniczej (wersja tylko polska)](https://edziennik.ulc.gov.pl/DU_ULC/2016/216/Zalacznik1.pdf)
 - [Podręcznik radiotelefonicznej frazeologii lotniczej (wersja angielska i polska)](https://edziennik.ulc.gov.pl/DU_ULC/2017/473/Zalacznik1.pdf)

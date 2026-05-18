@@ -11,7 +11,7 @@ Przyspieszenie może również zmieniać się w czasie, przez co wyróżniamy *
 
 Analogicznie wyróżniamy **prędkość średnią**, która jest stosunkiem przebytej drogi do czasu, w którym nastąpiło. **Prędkość chwilowa** to funkcja określająca taki sam stosunek, ale w bardzo małym czasie (bliskim zeru). Dla ruchu jednostajnego prędkość chwilowa jest funkcją stałą równą prędkości średniej, natomiast dla ruchu jednostajnie przyspieszonego jest średnią prędkości początkowej i końcowej: $V_{\text{śr}} = \frac{V_k - V_0}{2}$.
 
-### Wzory dla ruchu **jednostajnie** przyspieszonego
+## Wzory dla ruchu **jednostajnie** przyspieszonego
 
 Oznaczenia:
 

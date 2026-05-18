@@ -1,3 +1,5 @@
+# Ruch po okręgu
+
 Oznaczenia:
 
 - $R$ - promień okręgu
