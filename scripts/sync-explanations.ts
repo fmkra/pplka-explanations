@@ -1025,12 +1025,21 @@ async function main() {
     const generated = await generateRows(meta, sql)
     const { stats, kbNodesToRerender, knowledgeBaseTreeChanged } =
       await syncDatabaseFromGenerated(sql, generated)
+
+    const slugsToRerender = [
+      ...new Set(
+        kbNodesToRerender
+          .map((x) => x.slug)
+          .filter((s): s is string => s != null && s !== ''),
+      ),
+    ]
+
     console.log(
       JSON.stringify(
         {
           stats,
           knowledgeBaseTreeChanged,
-          kbNodesToRerender,
+          kbNodesToRerender: slugsToRerender,
           counts: {
             knowledgeBaseNodes: generated.knowledgeBaseRows.length,
             explanations: generated.explanationRows.length,
@@ -1043,14 +1052,6 @@ async function main() {
       ),
     )
 
-    const slugs = [
-      ...new Set(
-        kbNodesToRerender
-          .map((x) => x.slug)
-          .filter((s): s is string => s != null && s !== ''),
-      ),
-    ]
-
     const rebuildUrl = process.env.REVALIDATE_URL
     const rebuildToken = process.env.REVALIDATE_TOKEN
 
@@ -1058,16 +1059,16 @@ async function main() {
       if (!rebuildUrl) console.log('REVALIDATE_URL not set')
       if (!rebuildToken) console.log('REVALIDATE_TOKEN not set')
       console.log('Skipping static page revalidation')
-    } else if (slugs.length === 0 && !knowledgeBaseTreeChanged) {
+    } else if (slugsToRerender.length === 0 && !knowledgeBaseTreeChanged) {
       console.log('No KB pages to revalidate')
     } else {
-      console.log('Revalidating', slugs, knowledgeBaseTreeChanged)
+      console.log('Revalidating', slugsToRerender, knowledgeBaseTreeChanged)
       const res = await fetch(rebuildUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           key: rebuildToken,
-          slugs,
+          slugs: slugsToRerender,
           navigation: knowledgeBaseTreeChanged,
         }),
       })
@@ -1076,7 +1077,7 @@ async function main() {
         process.exit(1)
       }
       console.log(
-        `Revalidated ${slugs.length} slug(s), navigation=${knowledgeBaseTreeChanged}`,
+        `Revalidated ${slugsToRerender.length} slug(s), navigation=${knowledgeBaseTreeChanged}`,
       )
     }
   } finally {
