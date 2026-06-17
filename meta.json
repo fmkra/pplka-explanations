@@ -58,6 +58,14 @@
               ]
             }
           ]
+        },
+        {
+          "name": "Osie statku powietrznego",
+          "slug": "osie-statku-powietrznego",
+          "files": [
+            "zasady-lotu/osie-statku-powietrznego.md",
+            "zasady-lotu/osie-statku-powietrznego.svg"
+          ]
         }
       ]
     },
@@ -154,6 +162,27 @@
         "zasady-lotu/skrzydło/profil-skrzydła.svg"
       ]
     },
+    "PL080-0107": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0108": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0109": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
     "PL080-0116": {
       "explanations": [],
       "extra": [
@@ -179,11 +208,46 @@
         "zasady-lotu/skrzydło/profil-skrzydła.svg"
       ]
     },
+    "PL080-0119": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/skrzydło/profil-skrzydła.md",
+        "zasady-lotu/skrzydło/profil-skrzydła.svg"
+      ]
+    },
+    "PL080-0123": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
     "PL080-0141": {
       "explanations": [],
       "extra": [
         "zasady-lotu/skrzydło/profil-skrzydła.md",
         "zasady-lotu/skrzydło/profil-skrzydła.svg"
+      ]
+    },
+    "PL080-0148": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0149": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0150": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
       ]
     },
     "PL080-0167": {
@@ -216,11 +280,11 @@
         "zasady-lotu/skrzydło/profil-skrzydła.svg"
       ]
     },
-    "PL080-0119": {
+    "PL080-0195": {
       "explanations": [],
       "extra": [
-        "zasady-lotu/skrzydło/profil-skrzydła.md",
-        "zasady-lotu/skrzydło/profil-skrzydła.svg"
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
       ]
     },
     "PL080-0211": {
@@ -262,6 +326,20 @@
         "zasady-lotu/dynamika/ruch-po-okręgu.md"
       ]
     },
+    "PL080-0223": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0224": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
     "PL080-0233": {
       "explanations": [],
       "extra": [
@@ -269,11 +347,102 @@
         "zasady-lotu/skrzydło/obrys-skrzydła.svg"
       ]
     },
+    "PL080-0237": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0238": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0239": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0285": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0286": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0287": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
     "PL080-0311": {
       "explanations": [],
       "extra": [
         "zasady-lotu/skrzydło/profil-skrzydła.md",
         "zasady-lotu/skrzydło/profil-skrzydła.svg"
+      ]
+    },
+    "PL080-0344": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0345": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0346": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0347": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0348": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0349": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0350": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
       ]
     },
     "PL080-0392": {
@@ -286,6 +455,34 @@
       "explanations": [],
       "extra": [
         "zasady-lotu/dynamika/ruch-po-okręgu.md"
+      ]
+    },
+    "PL080-0504": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0505": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0506": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0507": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/osie-statku-powietrznego.md",
+        "zasady-lotu/osie-statku-powietrznego.svg"
       ]
     },
     "PL090-0004": {
