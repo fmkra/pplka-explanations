@@ -60,6 +60,17 @@
           ]
         },
         {
+          "name": "Stateczność i sterowność",
+          "slug": "statecznosc-i-sterownosc",
+          "files": [
+            "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+            "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+            "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+            "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+            "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+          ]
+        },
+        {
           "name": "Osie statku powietrznego",
           "slug": "osie-statku-powietrznego",
           "files": [
@@ -108,6 +119,16 @@
         "zasady-lotu/skrzydło/cisnienie-przy-profilu.svg"
       ]
     },
+    "PL080-0016": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
     "PL080-0018": {
       "explanations": [],
       "extra": [
@@ -115,11 +136,14 @@
         "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.svg"
       ]
     },
-    "PL080-0060": {
+    "PL080-0020": {
       "explanations": [],
       "extra": [
-        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.md",
-        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.svg"
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
       ]
     },
     "PL080-0023": {
@@ -127,6 +151,56 @@
       "extra": [
         "zasady-lotu/skrzydło/obrys-skrzydła.md",
         "zasady-lotu/skrzydło/obrys-skrzydła.svg"
+      ]
+    },
+    "PL080-0032": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0034": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0035": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0036": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0037": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
       ]
     },
     "PL080-0039": {
@@ -160,6 +234,33 @@
       "extra": [
         "zasady-lotu/skrzydło/profil-skrzydła.md",
         "zasady-lotu/skrzydło/profil-skrzydła.svg"
+      ]
+    },
+    "PL080-0060": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.md",
+        "zasady-lotu/skrzydło/oplyw-powietrza-wokol-skrzydla.svg"
+      ]
+    },
+    "PL080-0089": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0090": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
       ]
     },
     "PL080-0107": {
@@ -326,6 +427,16 @@
         "zasady-lotu/dynamika/ruch-po-okręgu.md"
       ]
     },
+    "PL080-0220": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
     "PL080-0223": {
       "explanations": [],
       "extra": [
@@ -338,6 +449,16 @@
       "extra": [
         "zasady-lotu/osie-statku-powietrznego.md",
         "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0226": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
       ]
     },
     "PL080-0233": {
@@ -368,6 +489,16 @@
         "zasady-lotu/osie-statku-powietrznego.svg"
       ]
     },
+    "PL080-0269": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
     "PL080-0285": {
       "explanations": [],
       "extra": [
@@ -389,11 +520,71 @@
         "zasady-lotu/osie-statku-powietrznego.svg"
       ]
     },
+    "PL080-0290": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0291": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
     "PL080-0311": {
       "explanations": [],
       "extra": [
         "zasady-lotu/skrzydło/profil-skrzydła.md",
         "zasady-lotu/skrzydło/profil-skrzydła.svg"
+      ]
+    },
+    "PL080-0329": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0332": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0336": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0337": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
       ]
     },
     "PL080-0344": {
@@ -445,6 +636,46 @@
         "zasady-lotu/osie-statku-powietrznego.svg"
       ]
     },
+    "PL080-0372": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0380": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0388": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0389": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
     "PL080-0392": {
       "explanations": [],
       "extra": [
@@ -455,6 +686,46 @@
       "explanations": [],
       "extra": [
         "zasady-lotu/dynamika/ruch-po-okręgu.md"
+      ]
+    },
+    "PL080-0482": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0485": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0489": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
+      ]
+    },
+    "PL080-0490": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
       ]
     },
     "PL080-0504": {
@@ -483,6 +754,16 @@
       "extra": [
         "zasady-lotu/osie-statku-powietrznego.md",
         "zasady-lotu/osie-statku-powietrznego.svg"
+      ]
+    },
+    "PL080-0529": {
+      "explanations": [],
+      "extra": [
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-statyczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.md",
+        "zasady-lotu/stateczność-i-sterowność/stateczność-dynamiczna.svg",
+        "zasady-lotu/stateczność-i-sterowność/sterowność.md"
       ]
     },
     "PL090-0004": {
