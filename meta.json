@@ -91,6 +91,72 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Prawo lotnicze",
+      "children": [
+        {
+          "name": "Przestrzeń powietrzna",
+          "children": [
+            {
+              "name": "Podział przestrzeni powietrznej",
+              "slug": "podzial-przestrzeni-powietrznej",
+              "files": [
+                "prawo-lotnicze/podział-przestrzeni-powietrznej.md"
+              ]
+            },
+            {
+              "name": "Przepisy VFR",
+              "slug": "przepisy-vfr",
+              "files": [
+                "prawo-lotnicze/przepisy-vfr.md"
+              ]
+            },
+            {
+              "name": "Ograniczenia dostępności przestrzeni powietrznej",
+              "slug": "ograniczenia-dostepnosci-przestrzeni-powietrznej",
+              "files": [
+                "prawo-lotnicze/ograniczenia-dostępności-przestrzeni-powietrznej.md"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Obowiązek pomocy",
+          "slug": "obowiazek-pomocy",
+          "files": [
+            "prawo-lotnicze/obowiązek-pomocy.md"
+          ]
+        },
+        {
+          "name": "Zrzuty ze statku powietrznego",
+          "slug": "zrzuty-ze-statku-powietrznego",
+          "files": [
+            "prawo-lotnicze/zrzuty.md"
+          ]
+        },
+        {
+          "name": "Skróty",
+          "slug": "skroty",
+          "files": [
+            "prawo-lotnicze/skróty.md"
+          ]
+        },
+        {
+          "name": "Służby ruchu lotniczego",
+          "slug": "sluzby-ruchu-lotniczego",
+          "files": [
+            "prawo-lotnicze/służby-ruchu-lotniczego.md"
+          ]
+        },
+        {
+          "name": "Sygnały świetlne",
+          "slug": "sygnaly-swietlne",
+          "files": [
+            "prawo-lotnicze/sygnały-świetlne.md"
+          ]
+        }
+      ]
     }
   ],
   "questions": {
@@ -805,6 +871,276 @@
     "PL090-0014": {
       "explanations": [
         "łączność/PL090-0014.md"
+      ],
+      "extra": []
+    },
+    "PL010-0001": {
+      "explanations": [
+        "prawo-lotnicze/pytania/PL010-0001.md"
+      ],
+      "extra": []
+    },
+    "PL010-0002": {
+      "explanations": [
+        "prawo-lotnicze/pytania/PL010-0002.md"
+      ],
+      "extra": []
+    },
+    "PL010-0003": {
+      "explanations": [
+        "prawo-lotnicze/sygnały-świetlne.md"
+      ],
+      "extra": []
+    },
+    "PL010-0004": {
+      "explanations": [
+        "prawo-lotnicze/ograniczenia-dostępności-przestrzeni-powietrznej.md"
+      ],
+      "extra": []
+    },
+    "PL010-0005": {
+      "explanations": [
+        "prawo-lotnicze/obowiązek-pomocy.md"
+      ],
+      "extra": []
+    },
+    "PL010-0006": {
+      "explanations": [
+        "prawo-lotnicze/obowiązek-pomocy.md"
+      ],
+      "extra": []
+    },
+    "PL010-0007": {
+      "explanations": [
+        "prawo-lotnicze/ograniczenia-dostępności-przestrzeni-powietrznej.md"
+      ],
+      "extra": []
+    },
+    "PL010-0009": {
+      "explanations": [
+        "prawo-lotnicze/zrzuty.md"
+      ],
+      "extra": []
+    },
+    "PL010-0010": {
+      "explanations": [
+        "prawo-lotnicze/służby-ruchu-lotniczego.md"
+      ],
+      "extra": []
+    },
+    "PL010-0011": {
+      "explanations": [
+        "prawo-lotnicze/służby-ruchu-lotniczego.md"
+      ],
+      "extra": []
+    },
+    "PL010-0013": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0014": {
+      "explanations": [
+        "prawo-lotnicze/podział-przestrzeni-powietrznej.md"
+      ],
+      "extra": []
+    },
+    "PL010-0015": {
+      "explanations": [
+        "prawo-lotnicze/skróty.md"
+      ],
+      "extra": []
+    },
+    "PL010-0016": {
+      "explanations": [
+        "prawo-lotnicze/skróty.md"
+      ],
+      "extra": []
+    },
+    "PL010-0017": {
+      "explanations": [
+        "prawo-lotnicze/skróty.md"
+      ],
+      "extra": []
+    },
+    "PL010-0018": {
+      "explanations": [
+        "prawo-lotnicze/podział-przestrzeni-powietrznej.md"
+      ],
+      "extra": []
+    },
+    "PL010-0019": {
+      "explanations": [
+        "prawo-lotnicze/skróty.md"
+      ],
+      "extra": []
+    },
+    "PL010-0021": {
+      "explanations": [
+        "prawo-lotnicze/skróty.md"
+      ],
+      "extra": []
+    },
+    "PL010-0022": {
+      "explanations": [
+        "prawo-lotnicze/skróty.md"
+      ],
+      "extra": []
+    },
+    "PL010-0023": {
+      "explanations": [
+        "prawo-lotnicze/podział-przestrzeni-powietrznej.md"
+      ],
+      "extra": []
+    },
+    "PL010-0243": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0244": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0245": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0246": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0247": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0248": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0355": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0356": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0438": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0439": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0440": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0441": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0442": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0443": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0444": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0445": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0446": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0447": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0448": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0449": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0450": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0451": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0596": {
+      "explanations": [
+        "prawo-lotnicze/podział-przestrzeni-powietrznej.md"
+      ],
+      "extra": []
+    },
+    "PL010-0597": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
+      ],
+      "extra": []
+    },
+    "PL010-0598": {
+      "explanations": [
+        "prawo-lotnicze/przepisy-vfr.md"
       ],
       "extra": []
     }

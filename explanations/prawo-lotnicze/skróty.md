@@ -1,0 +1,6 @@
+- AMC - Air Management Cell - Ośrodek Zarządzania Przestrzenią Powietrzną
+- ARP - Airport Reference Point - Punkt odniesienia lotniska
+- ATM - Air Traffic Management - Zarządzanie Ruchem Lotniczym
+- AUP - Airspace Use Plan - Plan Użytkowania Przestrzeni Powietrznej
+- CBA - Cross Border Area - Rejon lotów po obu stronach granicy państwa będący rejonem czasowo wydzielonym, ustanowionym ze względu na szczególne wymogi operacyjne
+- CTA - Control Area - Obszar kontrolowany
